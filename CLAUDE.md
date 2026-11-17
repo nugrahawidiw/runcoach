@@ -26,6 +26,7 @@ python -m runcoach readiness "path\2026-10-12.zip" --kind intervals|long|strides
 python -m runcoach weekly [--weeks 9] [--ctl0 17.13 --atl0 12.98] [--plan plan.toml]
 python -m runcoach plan plan.toml [--ics plan.ics]
 python -m runcoach analyze latest --kind long --chart long.svg   # inline SVG, no dependency
+python -m runcoach dashboard --out dashboard.html [--weeks 8]
 python -m runcoach trends "path\Garmin" [--window 7] [--weak-nights 3]
 python -m runcoach dedupe [--prefer strava|garmin]
 python scripts/gen_api_docs.py            # regenerate docs/API_REFERENCE.md after changing signatures
@@ -46,6 +47,7 @@ runcoach/
   analysis/weekly.py      summarize_weeks(activities, daily_loads, weeks, plan) -> list[dict] ; render_markdown
   analysis/plan.py        load_plan(plan.toml) ; compare(plan, activities) ; to_ics (needs the 'ics' extra)
   analysis/charts.py      pace_cadence_svg(report, profile) -> str  (inline SVG, no dependency)
+  analysis/dashboard.py   render_html(weeks, load_points, latest_report) -> str  (self-contained HTML)
   analysis/wellness_trends.py  summarize(nights, window, weak_nights) -> dict ; render_markdown
   analysis/session.py     detect_structure(laps, profile, kind) -> reps/recoveries for intervals & strides
   analysis/dedupe.py      find_duplicate_groups / resolve: one run cached from Strava and a FIT import
@@ -132,7 +134,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
 
 ## Definition of done
 No step here is satisfied by inspection. Run the thing.
-1. `python -m pytest` actually run, and the real count reported (162 passed today). Never write "tests pass"
+1. `python -m pytest` actually run, and the real count reported (199 passed today). Never write "tests pass"
    without the output in front of you. If you did not run them, say so.
 2. New behaviour has a test. A changed formula shows the pinned numbers before and after.
 3. Docs updated: `python scripts/gen_api_docs.py` after signature changes; edit `docs/*.md` if behaviour or

@@ -113,6 +113,10 @@ no seed is given, because CTL then starts from zero.
 
 **`metrics/vdot.py`** Daniels/Gilbert VDOT, bisection for equivalent times, Riegel projection (exponent 1.06).
 
+**`analysis/dashboard.py`** Static HTML from the cache: inline CSS and inline SVG only. `render_html`
+takes the weekly summaries, the load series and optionally the latest report; `generated` is passed in
+rather than read from the clock so output is reproducible.
+
 **`metrics/zones.py`** Time in zone from the 1 Hz `heartrate` stream, one second per measured sample, plus the
 easy-HR guide split. Zones come from `Profile.hr_zones`, the **lower** bounds of Z2..Z5. The standing table in
 `COACHING_CONTEXT.md` has gaps (151, 160, 168 bpm belong to no zone); using lower bounds only makes the

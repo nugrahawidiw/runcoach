@@ -10,6 +10,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from .analysis import charts as chart_svg
+from .analysis import dashboard as dashboard_html
 from .analysis import dedupe as dedupe_runs
 from .analysis import plan as plan_data
 from .analysis import readiness as readiness_rules
@@ -217,6 +218,30 @@ def _fmt(value, spec="", dash="-"):
     return dash if value is None else format(value, spec)
 
 
+def cmd_dashboard(args):
+    cache, profile = _cache(), load_profile()
+    kept, dropped = _cached_activities(cache)
+    if dropped:
+        print(_duplicate_note(dropped))
+    if not kept:
+        sys.exit("No cached runs. Run `runcoach sync` first.")
+    daily = _daily_loads(cache, profile, args.source)
+    weeks = weekly_summary.summarize_weeks([a for _, a in kept], daily, weeks=args.weeks,
+                                           ctl0=args.ctl0, atl0=args.atl0)
+    points = list(load_series(daily, min(daily), max(daily), args.ctl0, args.atl0)) if daily else []
+
+    latest = None
+    aid = _latest_id(cache)
+    activity = cache.get("activity", aid)
+    if activity:
+        latest = build_report(activity, cache.get("laps", aid) or [], cache.get("streams", aid) or {},
+                              profile, kind=args.kind)
+    page = dashboard_html.render_html(weeks, points, latest, profile, generated=date.today())
+    with open(args.out, "w", encoding="utf-8") as fh:
+        fh.write(page)
+    print(f"wrote {args.out} ({len(page) // 1024} KB, {len(weeks)} weeks)")
+
+
 def cmd_dedupe(args):
     cache = _cache()
     entries = [(aid, cache.get("activity", aid)) for aid in cache.ids("activity")]
@@ -376,6 +401,16 @@ def main(argv=None) -> int:
     dd.add_argument("--prefer", choices=["strava", "garmin"], default="strava")
     dd.add_argument("--json", action="store_true")
     dd.set_defaults(fn=cmd_dedupe)
+
+    db = sub.add_parser("dashboard", help="write a self-contained HTML dashboard from the cache")
+    db.add_argument("--out", default="dashboard.html")
+    db.add_argument("--weeks", type=int, default=8)
+    db.add_argument("--source", choices=["suffer", "trimp"], default="suffer")
+    db.add_argument("--kind", choices=["easy", "long", "strides", "intervals"], default="easy",
+                    help="kind of the latest run, for its chart")
+    db.add_argument("--ctl0", type=float, default=0.0)
+    db.add_argument("--atl0", type=float, default=0.0)
+    db.set_defaults(fn=cmd_dashboard)
 
     v = sub.add_parser("vdot", help="VDOT and equivalent times")
     v.add_argument("time", help="e.g. 26:17 or 2:08:21")

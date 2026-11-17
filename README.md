@@ -144,6 +144,16 @@ resting HR; then the resting-HR trend and how many weak nights have run consecut
 the sleep score is below 60, HRV status reads Unbalanced, or HRV is below the balanced range. The streak
 threshold that raises the alert is a parameter, not an agreed coaching rule.
 
+## Dashboard
+
+```
+python -m runcoach dashboard --out dashboard.html --weeks 8
+```
+
+One self-contained HTML file: summary cards, a CTL/ATL/TSB chart, the weekly table and the latest run's
+pace/cadence chart. No scripts, no external styles, no network, so it opens from disk and survives being
+emailed or copied to a phone.
+
 ## Charts
 
 ```

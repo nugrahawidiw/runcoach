@@ -15,6 +15,16 @@ Pace and cadence chart for one run, as inline SVG.
 - `_esc(text: str) -> str` *(private)*
 - `pace_cadence_svg(report: dict, profile: Profile | None=None) -> str` Pace (left axis, faster upwards) and cadence (right axis) per lap, with the pace bands shaded.
 
+### `runcoach/analysis/dashboard.py`
+
+Static HTML dashboard fed by the cache (roadmap P2).
+
+- `_esc(value) -> str` *(private)*
+- `load_svg(points: list) -> str` CTL, ATL and TSB over time. `points` are LoadPoint records from metrics.load.load_series.
+- `_cards(weeks: list[dict], points: list) -> str` *(private)*
+- `_weeks_table(weeks: list[dict]) -> str` *(private)*
+- `render_html(weeks: list[dict], points: list, latest_report: dict | None=None, profile: Profile | None=None, generated: dt.date | None=None) -> str` The whole page. `generated` is passed in rather than read from the clock, so output is reproducible.
+
 ### `runcoach/analysis/dedupe.py`
 
 Spot the same run cached twice, once from Strava and once from a Garmin FIT import.
@@ -112,6 +122,7 @@ Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | w
 - `cmd_fit_analyze(args)`
 - `cmd_fit_import(args)`
 - `_fmt(value, spec='', dash='-')` *(private)*
+- `cmd_dashboard(args)`
 - `cmd_dedupe(args)`
 - `cmd_trends(args)`
 - `cmd_readiness(args)`
@@ -256,9 +267,9 @@ Thin Strava API v3 client: automatic token refresh, 429 handling, rate-limit log
 
 - **class `StravaClient`**
   - `list_activities(self, after: int | None=None, before: int | None=None, per_page: int=100, max_pages: int=10) -> list[dict]`
-  - `get_activity(self, activity_id: int | str) -> dict | None`
-  - `get_laps(self, activity_id: int | str) -> list[dict]`
-  - `get_streams(self, activity_id: int | str, keys=STREAM_KEYS) -> dict` Full-resolution streams keyed by type: {'time': {'data': [...]}, ...}.
+  - `get_activity(self, activity_id: int | str) -> Activity | None`
+  - `get_laps(self, activity_id: int | str) -> list[Lap]`
+  - `get_streams(self, activity_id: int | str, keys=STREAM_KEYS) -> Streams` Full-resolution streams keyed by type: {'time': {'data': [...]}, ...}.
   - `get_gear(self, gear_id: str) -> dict | None`
 
 ### `runcoach/strava/errors.py`
@@ -273,3 +284,14 @@ Pull recent runs into the local cache (3 API calls per new run).
 
 - **class `SyncResult`**
 - `sync_recent(client: StravaClient, cache: Cache, days: int=14, force: bool=False, now: float | None=None) -> SyncResult`
+
+### `runcoach/strava/types.py`
+
+Typed shapes for the Strava REST responses this project reads (roadmap P2).
+
+- **class `Split`**
+- **class `Activity`**
+- **class `Lap`**
+- **class `StreamBlock`**
+- **class `Streams`**
+- `missing_keys(obj: dict, required: Iterable[str]) -> list[str]` Required keys absent from `obj`, in the order given. Empty means the shape is usable.
