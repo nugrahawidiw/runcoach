@@ -26,6 +26,14 @@ Build a 'deep dive' for one run from Strava API data (activity + laps + streams)
 - `build_report(activity: dict, laps: list[dict], streams: dict | None, profile: Profile, kind: str='easy') -> dict`
 - `render_markdown(rep: dict) -> str`
 
+### `runcoach/analysis/weekly.py`
+
+Weekly training summary: distance, time, runs and the CTL/ATL/TSB line at each week's end.
+
+- `week_start(day: dt.date) -> dt.date` The Monday of the week containing `day`.
+- `summarize_weeks(activities: Iterable[dict], daily_loads: Mapping[dt.date, float], weeks: int=4, ctl0: float=0.0, atl0: float=0.0) -> list[dict]` The last `weeks` Monday-to-Sunday weeks, newest last. Empty when there are no activities.
+- `render_markdown(summaries: list[dict]) -> str` One row per week. Load columns are blank for a week with no cached load data.
+
 ### `runcoach/cli.py`
 
 Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | wellness
@@ -37,6 +45,8 @@ Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | w
 - `cmd_sync(args)`
 - `_latest_id(cache: Cache) -> str` *(private)*
 - `cmd_analyze(args)`
+- `_daily_loads(cache, profile, source: str) -> dict[date, float]` *(private)* Daily training load from the cache. Shared by `load` and `weekly` so the two always agree.
+- `cmd_weekly(args)`
 - `cmd_load(args)`
 - `cmd_vdot(args)`
 - `_load_fit_run(path)` *(private)*

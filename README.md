@@ -91,6 +91,18 @@ Each night shows the sleep score and its parts, duration, HRV (last night, 7-day
 range and status), the lowest heart rate in the sleep window, Garmin's resting HR, stress during sleep,
 body battery change and an estimate of sleep stages.
 
+## Weekly summary
+
+```
+python -m runcoach weekly                       # last 4 weeks
+python -m runcoach weekly --weeks 9 --ctl0 17.13 --atl0 12.98
+```
+
+One row per Monday-to-Sunday week: runs, distance, moving time, average pace, longest run, and the
+CTL/ATL/TSB line read at the week's end. Weeks with no runs still appear, so a rest week and its rising TSB
+are visible. Load columns are blank for weeks before the cache starts rather than filled with a guess.
+Planned vs actual is not included yet: the plan is not available as data (roadmap P1.7).
+
 ## Readiness
 
 ```

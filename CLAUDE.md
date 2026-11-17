@@ -23,6 +23,7 @@ python -m runcoach auth | sync --days 7 | analyze latest --kind long | load | vd
 python -m runcoach fit-analyze "path\run.fit" | fit-import "path\run.fit"
 python -m runcoach wellness "path\2026-10-12.zip" [--csv nights.csv]
 python -m runcoach readiness "path\2026-10-12.zip" --kind intervals|long|strides|gate [--legs-flat]
+python -m runcoach weekly [--weeks 9] [--ctl0 17.13 --atl0 12.98]
 python scripts/gen_api_docs.py            # regenerate docs/API_REFERENCE.md after changing signatures
 ```
 Use `python -m runcoach ...` rather than a bare `runcoach` (Windows PATH issues). Secrets live in `.env`
@@ -38,6 +39,7 @@ runcoach/
   metrics/                pace, gap, decoupling, cadence, load (TRIMP, CTL), vdot, zones  (pure functions)
   analysis/run_report.py  build_report(activity, laps, streams, profile) -> dict ; render_markdown
   analysis/readiness.py   evaluate(night, kind) -> dict ; render_markdown (rule status is carried through)
+  analysis/weekly.py      summarize_weeks(activities, daily_loads, weeks) -> list[dict] ; render_markdown
 tests/                    pytest; fixtures.py has REAL laps from the coaching sessions; fitwriter.py writes FIT files
 docs/                     ARCHITECTURE, COACHING_CONTEXT, FIT_AND_WELLNESS_NOTES, ROADMAP, API_REFERENCE (generated)
 ```
@@ -116,7 +118,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
 
 ## Definition of done
 No step here is satisfied by inspection. Run the thing.
-1. `python -m pytest` actually run, and the real count reported (60 passed today). Never write "tests pass"
+1. `python -m pytest` actually run, and the real count reported (72 passed today). Never write "tests pass"
    without the output in front of you. If you did not run them, say so.
 2. New behaviour has a test. A changed formula shows the pinned numbers before and after.
 3. Docs updated: `python scripts/gen_api_docs.py` after signature changes; edit `docs/*.md` if behaviour or

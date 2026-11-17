@@ -10,6 +10,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from .analysis import readiness as readiness_rules
+from .analysis import weekly as weekly_summary
 from .analysis.run_report import build_report, render_markdown
 from .config import data_dir, load_env, load_profile
 from .fit.activity import activity_from_messages, cache_id
@@ -83,13 +84,13 @@ def cmd_analyze(args):
     print(json.dumps(report, indent=2) if args.json else render_markdown(report))
 
 
-def cmd_load(args):
-    cache, profile = _cache(), load_profile()
+def _daily_loads(cache, profile, source: str) -> dict[date, float]:
+    """Daily training load from the cache. Shared by `load` and `weekly` so the two always agree."""
     daily: dict[date, float] = defaultdict(float)
     for aid in cache.ids("activity"):
         act = cache.get("activity", aid)
         day = date.fromisoformat(act["start_date_local"][:10])
-        if args.source == "suffer" and act.get("suffer_score") is not None:
+        if source == "suffer" and act.get("suffer_score") is not None:
             daily[day] += float(act["suffer_score"])
         else:
             st = cache.get("streams", aid) or {}
@@ -97,6 +98,25 @@ def cmd_load(args):
             tm = (st.get("time") or {}).get("data")
             if hr and tm:
                 daily[day] += banister_trimp(hr, tm, profile.hr_rest, profile.hr_max, profile.sex)
+    return daily
+
+
+def cmd_weekly(args):
+    cache, profile = _cache(), load_profile()
+    activities = [a for a in (cache.get("activity", aid) for aid in cache.ids("activity")) if a]
+    summaries = weekly_summary.summarize_weeks(activities, _daily_loads(cache, profile, args.source),
+                                               weeks=args.weeks, ctl0=args.ctl0, atl0=args.atl0)
+    if not summaries:
+        sys.exit("No cached runs. Run `runcoach sync` first.")
+    if args.json:
+        print(json.dumps(summaries, indent=2))
+    else:
+        print(weekly_summary.render_markdown(summaries))
+
+
+def cmd_load(args):
+    cache, profile = _cache(), load_profile()
+    daily = _daily_loads(cache, profile, args.source)
     if not daily:
         sys.exit("No cached runs with load data. Run `runcoach sync` first.")
     end = max(daily)
@@ -243,6 +263,14 @@ def main(argv=None) -> int:
                    help="report the legs as flat (the strides rule has no data source for this)")
     r.add_argument("--json", action="store_true")
     r.set_defaults(fn=cmd_readiness)
+
+    wk = sub.add_parser("weekly", help="per-week distance, time, runs and the CTL/ATL/TSB line")
+    wk.add_argument("--weeks", type=int, default=4)
+    wk.add_argument("--source", choices=["suffer", "trimp"], default="suffer")
+    wk.add_argument("--ctl0", type=float, default=0.0)
+    wk.add_argument("--atl0", type=float, default=0.0)
+    wk.add_argument("--json", action="store_true")
+    wk.set_defaults(fn=cmd_weekly)
 
     v = sub.add_parser("vdot", help="VDOT and equivalent times")
     v.add_argument("time", help="e.g. 26:17 or 2:08:21")

@@ -41,3 +41,16 @@ def streams_for(rows):
 
 def laps_for_decoupling(rows):
     return [{"moving_time": s, "distance": d, "avg_hr": hr, "grade_pct": g} for s, d, g, hr, _c in rows]
+
+
+def activity_for(rows, day, name="Run", suffer=None):
+    """A Strava-shaped activity whose totals are the sum of these laps (nothing hand-typed)."""
+    act = {
+        "name": name,
+        "start_date_local": f"{day}T06:00:00Z",
+        "distance": sum(r[1] for r in rows),
+        "moving_time": sum(r[0] for r in rows),
+    }
+    if suffer is not None:
+        act["suffer_score"] = suffer
+    return act

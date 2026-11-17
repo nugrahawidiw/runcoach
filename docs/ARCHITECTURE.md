@@ -32,6 +32,8 @@ Design rule: **convert every source to Strava's REST shapes first**, then run on
 4. **Analysis** (`analysis/run_report.py`): joins laps + streams + profile into a report dict.
    `analysis/readiness.py` turns one wellness Night plus a planned session kind into a recommendation,
    carrying each rule's status (confirmed / in_plan / suggested / proposed_not_confirmed) into the output.
+   `analysis/weekly.py` groups cached activities into Monday-to-Sunday weeks and reads CTL/ATL/TSB at each
+   week's end. `cli._daily_loads` is shared by `load` and `weekly` so the two cannot disagree.
 5. **CLI** (`cli.py`): argument parsing and printing only.
 
 ## 4. Data shapes (the contract between layers)

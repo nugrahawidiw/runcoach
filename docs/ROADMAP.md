@@ -43,7 +43,14 @@ Order matters: P0 items verify what is already built; build new features on veri
 4. **Charts:** pace and cadence over time with segment bands (PNG or HTML), replacing the hand-built charts.
    Acceptance: same inputs as `report`; optional dependency (`matplotlib` or inline SVG), clearly marked.
 5. **Dedupe Strava vs Garmin runs** when both are cached (match on start time +/- 2 min and distance).
-6. **Weekly summary** command: km, time, runs, planned vs actual, and the CTL/ATL/TSB line.
+6. **MOSTLY DONE 2026-11-17: weekly summary.** `analysis/weekly.py` + `runcoach weekly [--weeks N]
+   [--source suffer|trimp] [--ctl0 X --atl0 Y] [--json]`. One row per Monday-to-Sunday week (weeks run
+   Mon-Sun per section 3 above): runs, distance, moving time, average pace, longest run, and CTL/ATL/TSB read
+   at the week's end. Weeks with no runs are still listed so a rest week and its rising TSB show up; load
+   columns are blank for weeks before the cache starts rather than guessed. 12 tests.
+   **Not done: planned vs actual.** The plan exists only as prose in COACHING_CONTEXT, not as data, and
+   comparing against an invented plan would be worse than omitting it. Blocked on P1.7 (plan as data); the
+   rendered output says so. Add the planned columns to `weekly.py` once a plan file exists.
 7. **Plan as data:** a `plan.yaml` (or TOML) with sessions and targets; compare plan vs actual; export `.ics` using the
    `icalendar` library (hand-built `.ics` previously broke on line folding).
 8. **Wellness trends:** rolling HRV vs balanced range, resting-HR trend, a "weak markers for N nights" detector.
