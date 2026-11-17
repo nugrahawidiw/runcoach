@@ -25,7 +25,13 @@ classifiers = [
 dependencies = ["requests>=2.31", "fitdecode>=0.10"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.14", "pre-commit>=4", "icalendar>=6"]
+# Everything needed to run the suite and the linter. Pure-python wheels only, so this installs on a
+# brand-new Python before the C-extension projects have published wheels for it.
+test = ["pytest>=8", "ruff>=0.14", "icalendar>=6"]
+# test plus the commit hooks. pre-commit pulls in PyYAML, which needs a C compiler on a Python version
+# it has no wheel for yet: on Python 3.15/Windows this failed with "Microsoft Visual C++ 14.0 or greater
+# is required". Use [test] there, or install pre-commit separately once a wheel exists.
+dev = ["runcoach[test]", "pre-commit>=4"]
 # Only needed for `plan --ics`. The core install stays requests + fitdecode.
 ics = ["icalendar>=6"]
 

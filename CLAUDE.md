@@ -16,7 +16,7 @@ stress, body battery). Single user, single machine. No web server, no database.
 ```
 python -m venv .venv
 .venv\Scripts\activate
-pip install -e ".[dev]"
+pip install -e ".[test,ics]"              # add [dev] for pre-commit; it needs a PyYAML wheel
 python -m pytest                          # must stay green; 34 tests; all offline
 python -m runcoach --help
 python -m runcoach auth | sync --days 7 | analyze latest --kind long | load | vdot 26:17 5000

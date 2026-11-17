@@ -94,9 +94,13 @@ body battery change and an estimate of sleep stages.
 ## Install
 
 ```
-pip install -e ".[dev]"            # working on the code
-pip install -e ".[dev,ics]"        # ... and the .ics export
+pip install -e ".[test,ics]"       # run the suite, the linter and the .ics export
+pip install -e ".[dev,ics]"        # ... and the pre-commit hooks
 ```
+
+`[dev]` adds `pre-commit`, which pulls in PyYAML. On a Python version PyYAML has no wheel for yet (3.15 on
+Windows, for instance) that tries to compile and fails with *Microsoft Visual C++ 14.0 or greater is
+required*. Use `[test]` there; everything but the commit hooks works.
 
 Or build a wheel and install it anywhere (needs only `requests` and `fitdecode`):
 

@@ -29,7 +29,8 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: Install
-        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+        # [test], not [dev]: CI does not run the commit hooks, and pre-commit would pull in PyYAML.
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[test]"
 
       - name: Lint
         run: ruff check .
