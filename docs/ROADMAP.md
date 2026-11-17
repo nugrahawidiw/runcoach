@@ -18,10 +18,10 @@ Order matters: P0 items verify what is already built; build new features on veri
    cadence, lap paces). Add a small sanitized fixture or a synthetic file that reproduces any difference found.
 3. **Settle sleep stages** against Garmin Connect (`FIT_AND_WELLNESS_NOTES.md` section 4). Update `stage_minutes` and
    its test, or remove stage output if it cannot be made reliable.
-4. **PARTLY DONE 2026-11-17: tooling.** git initialized (`nugrahawidiw/runcoach`), `ruff` configured in
-   `pyproject.toml` (line-length 135, `E,F,I,UP`; `E702`/`E741` ignored as house style) and a pre-commit hook
-   runs ruff on staged files plus the full suite. `ruff check` and `pytest` both pass.
-   Still open: a **CI workflow** that runs pytest on push.
+4. **DONE 2026-11-17: tooling.** git initialized (`nugrahawidiw/runcoach`), `ruff` configured in
+   `pyproject.toml` (line-length 135, `E,F,I,UP`; `E702`/`E741` ignored as house style), a pre-commit hook
+   runs ruff on staged files plus the full suite, and `.github/workflows/ci.yml` runs ruff and pytest on
+   ubuntu + windows for Python 3.11 and 3.13. `ruff check` and `pytest` both pass.
 
 ## P1: features (each needs tests)
 1. **Readiness command** `runcoach readiness`: latest wellness night + planned session -> recommendation using the
