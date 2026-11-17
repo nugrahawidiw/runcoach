@@ -1,0 +1,10 @@
+# Athlete profile. Copy to profile.toml and adjust. Paces are seconds per km.
+easy_band    = [399, 436]   # 6:39-7:16
+goal_band    = [355, 367]   # 5:55-6:07
+tempo_band   = [336, 348]   # 5:36-5:48
+stride_cadence = [181, 191] # steps per minute during strides
+easy_hr_guide = 145         # run easy/long days at or below this HR
+lthr   = 169                # lactate threshold HR (estimate)
+hr_rest = 55                # set your own
+hr_max  = 178               # set your own (used by TRIMP)
+sex = "male"                # "male" or "female" (TRIMP constants)

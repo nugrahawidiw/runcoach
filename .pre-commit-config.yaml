@@ -1,0 +1,18 @@
+# Runs on staged files only, so pre-existing issues elsewhere never block an
+# unrelated commit. Install once:  pre-commit install
+# Run over everything by hand:     pre-commit run --all-files
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff (lint)
+        entry: ruff check --force-exclude
+        language: system
+        types: [python]
+        require_serial: true
+      - id: pytest
+        name: pytest (full suite, offline)
+        entry: python -m pytest -q
+        language: system
+        pass_filenames: false
+        always_run: true

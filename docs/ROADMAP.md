@@ -1,0 +1,57 @@
+# Roadmap and known issues
+
+Order matters: P0 items verify what is already built; build new features on verified ground.
+
+## P0: verify and harden
+1. **DONE 2026-10-12: Strava path run live.** `auth`, `sync --days 7`, `sync --days 21`, `analyze latest --kind long`,
+   `load`, `vdot` all worked against the owner's real account (13 runs cached). Results matched the hand analysis:
+   10.03 km, 1:09:45 moving, 6:57/km, HR 140.7/158, cadence 170.2 spm, +56 m; Relative Effort per day 22, 47, 19, 26,
+   33 (identical to the values used earlier). Differences found and handled:
+   - A 25 m trailing "lap 11" nudged raw decoupling from 6.92% to 7.01%: trailing laps under 50 m are now ignored.
+   - Grade is averaged from the `grade_smooth` stream, not Strava's lap grade (lap 1: -1.0% vs -1.2%); grade-adjusted
+     decoupling is -1.46% live vs -1.33% in the hand analysis. Both are fine; neither is "wrong".
+   - Strava reports **read** limits separately (100 per 15 min, 1,000 per day on this app); the client now tracks them.
+   - `load` over a short history starts from zero and understates CTL; it now prints a NOTE (seed with `--ctl0/--atl0`).
+   Still open: add a **sanitized recorded-response fixture** from `data/cache/` (remove names, locations, ids) so the
+   REST shapes are pinned by a test.
+2. **Validate the FIT run reader on a real watch file.** Compare with Strava/Garmin Connect (distance, time, HR,
+   cadence, lap paces). Add a small sanitized fixture or a synthetic file that reproduces any difference found.
+3. **Settle sleep stages** against Garmin Connect (`FIT_AND_WELLNESS_NOTES.md` section 4). Update `stage_minutes` and
+   its test, or remove stage output if it cannot be made reliable.
+4. **Tooling:** add `ruff` (lint + format) and a pre-commit hook; initialize git; add a CI workflow that runs pytest.
+   Acceptance: `ruff check` and `pytest` pass.
+
+## P1: features (each needs tests)
+1. **Readiness command** `runcoach readiness`: latest wellness night + planned session -> recommendation using the
+   rules in `COACHING_CONTEXT.md` (clearly separating confirmed rules from proposals). Acceptance: deterministic
+   output for fixed inputs; every rule has a test; prints which rule fired.
+2. **Session-structure detection** for intervals and strides from laps/streams (work vs recovery blocks, rep pace,
+   rep HR, rep cadence, fade between reps, first-minute overshoot). Acceptance: reproduces the Oct 7 intervals
+   numbers (reps 5:23 / 5:27 / 5:27; cadence 172.9 / 170.8 / 170.0) and the Oct 9 strides table (5 of 6 in band).
+3. **HR zone time-in-zone** using the standing zones (Z1 < 144 ... Z5 169+) and the HR guide check by minutes.
+4. **Charts:** pace and cadence over time with segment bands (PNG or HTML), replacing the hand-built charts.
+   Acceptance: same inputs as `report`; optional dependency (`matplotlib` or inline SVG), clearly marked.
+5. **Dedupe Strava vs Garmin runs** when both are cached (match on start time +/- 2 min and distance).
+6. **Weekly summary** command: km, time, runs, planned vs actual, and the CTL/ATL/TSB line.
+7. **Plan as data:** a `plan.yaml` (or TOML) with sessions and targets; compare plan vs actual; export `.ics` using the
+   `icalendar` library (hand-built `.ics` previously broke on line folding).
+8. **Wellness trends:** rolling HRV vs balanced range, resting-HR trend, a "weak markers for N nights" detector.
+
+## P2: later
+- Dashboard generator (static HTML) fed by the cache; the previous hand-made dashboard is a design reference.
+- Strava webhooks instead of polling; SQLite instead of JSON files; typed models (dataclasses/TypedDict) for REST shapes.
+- Packaging for easier install; CLI integration tests; Windows path edge cases.
+
+## Known issues and risks
+- Real FIT run files are untested (see P0 item 2). Live Strava calls were verified on 2026-10-12.
+- `load` starts the series `--days` before the last activity and seeds it with `--ctl0/--atl0`; without long history
+  CTL is understated. Use a long `sync` (in rate-limit-sized chunks) or seed from a known value.
+- `load --source suffer` silently falls back to TRIMP for activities without `suffer_score`; mixing scales gives
+  misleading CTL. Consider failing loudly or marking mixed series.
+- `analyze --kind strides|intervals` has no special logic yet; decoupling is meaningless for those.
+- Wellness `stress_export_*` window semantics are loose; `sleep_start/end` use the watch's offset.
+- `.env` parser is minimal (no inline comments or multi-line values).
+- Tokens are stored unencrypted; `chmod 0600` has no effect on Windows.
+- The sleep-window and body-battery messages are undocumented and may change with firmware.
+- Rate limits for the owner's app: overall 200 per 15 minutes / 2,000 per day; read 100 per 15 minutes / 1,000 per day
+  (from the Strava API page). A sync used about 2 counted requests per run in practice, less than the 3 calls made.
