@@ -89,7 +89,7 @@ Order matters: P0 items verify what is already built; build new features on veri
    only report and filter -- so a wrong match costs a line of output, not data. Same-source pairs are
    deliberately never merged: two Strava rows at one time are a cache problem that should stay visible.
    15 tests.
-6. **MOSTLY DONE 2026-11-17: weekly summary.** `analysis/weekly.py` + `runcoach weekly [--weeks N]
+6. **DONE 2026-11-17: weekly summary.** `analysis/weekly.py` + `runcoach weekly [--weeks N]
    [--source suffer|trimp] [--ctl0 X --atl0 Y] [--json]`. One row per Monday-to-Sunday week (weeks run
    Mon-Sun per section 3 above): runs, distance, moving time, average pace, longest run, and CTL/ATL/TSB read
    at the week's end. Weeks with no runs are still listed so a rest week and its rising TSB show up; load
@@ -115,18 +115,51 @@ Order matters: P0 items verify what is already built; build new features on veri
    choice is how many consecutive weak nights raise the alert: it defaults to 3, is a parameter, and both
    the module and the rendered output say it is not an agreed rule. 17 tests.
 
-## P2: later
-- Dashboard generator (static HTML) fed by the cache; the previous hand-made dashboard is a design reference.
-- Strava webhooks instead of polling; SQLite instead of JSON files; typed models (dataclasses/TypedDict) for REST shapes.
-- Packaging for easier install; CLI integration tests; Windows path edge cases.
+## P2
+1. **DONE 2026-11-17: dashboard generator.** `analysis/dashboard.py` + `runcoach dashboard [--out
+   dashboard.html] [--weeks 8]`. Summary cards, a CTL/ATL/TSB chart, the weekly table and the latest run's
+   chart, reusing `analysis/charts.py`. One self-contained file: inline CSS and SVG, no scripts, no fonts,
+   no network, asserted by a test. `generated` is passed in rather than read from the clock, so output is
+   reproducible. The previous hand-made dashboard is not in the repository, so this was built from what the
+   code produces; if that page still exists and differs in ways that matter, adjust here. 11 tests.
+2. **DONE 2026-11-17: typed models.** `runcoach/strava/types.py` declares Activity, Lap, Split, StreamBlock
+   and Streams as `TypedDict`s and the client is annotated with them. TypedDict rather than dataclasses
+   because the cache stores the API's JSON verbatim, so describing the dict that is already there costs
+   nothing at runtime. All `total=False`, since Strava omits fields rather than sending nulls. `REQUIRED_*`
+   and `missing_keys()` report what a response lacks. 10 tests check the types against the recorded response
+   so they cannot drift into decoration. 
+3. **DONE 2026-11-17: CLI integration tests and Windows path edge cases.**
+   `tests/test_cli_integration.py`: 16 end-to-end runs through `main()` with a temporary data directory,
+   plus folders and files with spaces, punctuation and non-ASCII names, a relative path, a zip nested
+   several folders deep, a non-FIT file, and a missing path. Real FIT bytes from `fitwriter`, not stubs.
+   The project's own directory contains a space, so these are the cases that actually occur.
+4. **DONE 2026-11-17: packaging.** readme, keywords, classifiers and repository URL in `pyproject.toml`,
+   plus a `Private :: Do Not Upload` classifier so an accidental PyPI upload fails. A wheel was built and
+   installed into a clean venv, where `runcoach vdot 26:17 5000` gives VDOT 36.1 with only `requests` and
+   `fitdecode`. README documents both install routes. **No licence is declared**: the repository has no
+   LICENSE file and that choice is the owner's.
+5. **NOT DONE, and recommended against: Strava webhooks instead of polling.** Strava pushes events to a
+   public HTTPS callback that it validates when the subscription is created. This runs on one Windows
+   laptop with no server, so it would need a tunnel or a hosted endpoint: permanent infrastructure, for a
+   tool that polls well inside its limits (about 3 calls per run against 100 reads per 15 minutes).
+   Reconsider only if syncing ever becomes a real constraint.
+6. **NOT DONE, deferred on purpose: SQLite instead of JSON files.** Buildable, but the JSON cache works, is
+   one file per resource, and is readable with a text editor -- which is how the P0.1 recorded-response
+   fixture was made. SQLite would buy faster queries over a few hundred files and cost direct inspection.
+   Worth doing when something is measurably slow; if it is done, keep a JSON export so the cache stays
+   inspectable.
+
+## P3: nothing queued
+Everything the roadmap listed is either done or explicitly deferred above. New work starts here.
 
 ## Known issues and risks
-- Real FIT run files are untested (see P0 item 2). Live Strava calls were verified on 2026-10-12.
+- Real FIT run files were untested until 2026-11-17; the reader now matches Strava on a real watch file (P0.2).
+  Live Strava calls were verified on 2026-10-12 and the responses are pinned as a fixture (P0.1).
 - `load` starts the series `--days` before the last activity and seeds it with `--ctl0/--atl0`; without long history
   CTL is understated. Use a long `sync` (in rate-limit-sized chunks) or seed from a known value.
 - `load --source suffer` silently falls back to TRIMP for activities without `suffer_score`; mixing scales gives
   misleading CTL. Consider failing loudly or marking mixed series.
-- `analyze --kind strides|intervals` has no special logic yet; decoupling is meaningless for those.
+- `analyze --kind strides|intervals` now detects reps (P1.2) and suppresses decoupling, which is meaningless there.
 - Wellness `stress_export_*` window semantics are loose; `sleep_start/end` use the watch's offset.
 - `.env` parser is minimal (no inline comments or multi-line values).
 - Tokens are stored unencrypted; `chmod 0600` has no effect on Windows.
