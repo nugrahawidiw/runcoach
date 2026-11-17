@@ -40,8 +40,14 @@ Order matters: P0 items verify what is already built; build new features on veri
    35:31 of 1:09:46 (51%) at or below the 145 guide. The standing zones have gaps (151, 160, 168 bpm), so
    zones are defined by lower bounds and each gap bpm joins the zone below; see `metrics/zones.py`.
    Open question for the owner: if a gap bpm should instead count to the zone *above*, change `hr_zones`.
-4. **Charts:** pace and cadence over time with segment bands (PNG or HTML), replacing the hand-built charts.
-   Acceptance: same inputs as `report`; optional dependency (`matplotlib` or inline SVG), clearly marked.
+4. **DONE 2026-11-17: charts.** `analysis/charts.py` + `--chart OUT.svg` on `analyze` and `fit-analyze`,
+   taking the report dict, so the chart has the same inputs as the report. Pace (left axis, faster upwards)
+   and cadence (right axis, dashed) per lap, with the easy/goal/tempo bands shaded behind them.
+   **Inline SVG, not matplotlib**, which the acceptance allows: no dependency at all, renders in any browser,
+   diffs as text. No PNG as a result; open the SVG and export if a raster is needed, or swap the module for
+   matplotlib behind the same signature. Output is self-contained (no external fonts, scripts or images).
+   13 tests, including XML validity, inverted pace axis, escaping, and that axis labels stay inside the
+   canvas -- a screenshot showed "Cadence spm" clipped at the right edge, which no other test caught.
 5. **Dedupe Strava vs Garmin runs** when both are cached (match on start time +/- 2 min and distance).
 6. **MOSTLY DONE 2026-11-17: weekly summary.** `analysis/weekly.py` + `runcoach weekly [--weeks N]
    [--source suffer|trimp] [--ctl0 X --atl0 Y] [--json]`. One row per Monday-to-Sunday week (weeks run

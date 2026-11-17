@@ -25,6 +25,7 @@ python -m runcoach wellness "path\2026-10-12.zip" [--csv nights.csv]
 python -m runcoach readiness "path\2026-10-12.zip" --kind intervals|long|strides|gate [--legs-flat]
 python -m runcoach weekly [--weeks 9] [--ctl0 17.13 --atl0 12.98] [--plan plan.toml]
 python -m runcoach plan plan.toml [--ics plan.ics]
+python -m runcoach analyze latest --kind long --chart long.svg   # inline SVG, no dependency
 python scripts/gen_api_docs.py            # regenerate docs/API_REFERENCE.md after changing signatures
 ```
 Use `python -m runcoach ...` rather than a bare `runcoach` (Windows PATH issues). Secrets live in `.env`
@@ -42,6 +43,7 @@ runcoach/
   analysis/readiness.py   evaluate(night, kind) -> dict ; render_markdown (rule status is carried through)
   analysis/weekly.py      summarize_weeks(activities, daily_loads, weeks, plan) -> list[dict] ; render_markdown
   analysis/plan.py        load_plan(plan.toml) ; compare(plan, activities) ; to_ics (needs the 'ics' extra)
+  analysis/charts.py      pace_cadence_svg(report, profile) -> str  (inline SVG, no dependency)
 tests/                    pytest; fixtures.py has REAL laps from the coaching sessions; fitwriter.py writes FIT files
 docs/                     ARCHITECTURE, COACHING_CONTEXT, FIT_AND_WELLNESS_NOTES, ROADMAP, API_REFERENCE (generated)
 ```

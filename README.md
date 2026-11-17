@@ -103,6 +103,16 @@ CTL/ATL/TSB line read at the week's end. Weeks with no runs still appear, so a r
 are visible. Load columns are blank for weeks before the cache starts rather than filled with a guess.
 Planned vs actual is not included yet: the plan is not available as data (roadmap P1.7).
 
+## Charts
+
+```
+python -m runcoach analyze latest --kind long --chart long.svg
+python -m runcoach fit-analyze "D:\run.fit" --chart run.svg
+```
+
+Pace per lap (left axis, faster upwards) and cadence (right axis, dashed), with the easy, goal and tempo
+bands shaded behind. Inline SVG, so it needs no extra package and opens in any browser.
+
 ## Plan vs actual
 
 ```

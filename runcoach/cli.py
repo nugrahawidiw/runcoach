@@ -9,6 +9,7 @@ import sys
 from collections import defaultdict
 from datetime import date, timedelta
 
+from .analysis import charts as chart_svg
 from .analysis import plan as plan_data
 from .analysis import readiness as readiness_rules
 from .analysis import weekly as weekly_summary
@@ -74,6 +75,12 @@ def _latest_id(cache: Cache) -> str:
     return best[1]
 
 
+def _write_chart(report, path: str) -> None:
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(chart_svg.pace_cadence_svg(report, load_profile()))
+    print(f"wrote {path}")
+
+
 def cmd_analyze(args):
     cache = _cache()
     aid = _latest_id(cache) if args.activity == "latest" else args.activity
@@ -83,6 +90,8 @@ def cmd_analyze(args):
     report = build_report(activity, cache.get("laps", aid) or [], cache.get("streams", aid) or {},
                           load_profile(), kind=args.kind)
     print(json.dumps(report, indent=2) if args.json else render_markdown(report))
+    if args.chart:
+        _write_chart(report, args.chart)
 
 
 def _daily_loads(cache, profile, source: str) -> dict[date, float]:
@@ -164,6 +173,8 @@ def cmd_fit_analyze(args):
     run = _load_fit_run(args.path)
     report = build_report(run.activity, run.laps, run.streams, load_profile(), kind=args.kind)
     print(json.dumps(report, indent=2) if args.json else render_markdown(report))
+    if args.chart:
+        _write_chart(report, args.chart)
 
 
 def cmd_fit_import(args):
@@ -247,6 +258,7 @@ def main(argv=None) -> int:
     a = sub.add_parser("analyze", help="deep dive on one run")
     a.add_argument("activity", nargs="?", default="latest")
     a.add_argument("--kind", choices=["easy", "long", "strides", "intervals"], default="easy")
+    a.add_argument("--chart", metavar="OUT.svg", help="also write a pace/cadence chart")
     a.add_argument("--json", action="store_true")
     a.set_defaults(fn=cmd_analyze)
 
@@ -260,6 +272,7 @@ def main(argv=None) -> int:
     fa = sub.add_parser("fit-analyze", help="deep dive on a Garmin activity .fit file")
     fa.add_argument("path")
     fa.add_argument("--kind", choices=["easy", "long", "strides", "intervals"], default="easy")
+    fa.add_argument("--chart", metavar="OUT.svg", help="also write a pace/cadence chart")
     fa.add_argument("--json", action="store_true")
     fa.set_defaults(fn=cmd_fit_analyze)
 
