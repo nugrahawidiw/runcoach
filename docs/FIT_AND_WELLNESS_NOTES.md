@@ -56,10 +56,11 @@ A daily zip usually contains one night. A folder of zips is handled one export a
    runcoach reports 7h27 (447 min); the difference is exactly the 18 minutes awake. Connect's Sleep Duration
    is deep + light + REM and **excludes awake**, while `duration_min` is the whole sleep window. A second
    night (Nov 15: 1h25 + 4h24 + 22m = 6h11, awake 49m shown separately) confirms the same rule.
-   **Open decision for the owner, not changed unilaterally:** `COACHING_CONTEXT.md` records 377 min for the
-   night of 2026-10-11/12 as validated by hand, and that figure includes awake (103 + 206 + 61 + 7). Under
-   Connect's definition the same night is 370 min. Changing `duration_min` would move a pinned golden number,
-   so it needs the owner to say which number the reports should carry.
+   **Resolved 2026-11-17: the owner chose Connect's definition.** `duration_min` is now deep + light + REM
+   and excludes awake; the whole sleep window stays available as `time_in_bed_min`. Oct 19 now reports 7h09,
+   matching Connect exactly. This moved the golden number for Oct 11-12 from 377 to 370 min (377 is now
+   `time_in_bed_min`), which `COACHING_CONTEXT.md` records. With no `sleep_level` messages there are no
+   stages to sum, so `duration_min` falls back to the window and equals `time_in_bed_min`.
 2. `awake_min_summary` (summary field, 29.4 min on that night) differs from the stage-derived awake minutes (7).
    They probably measure different things; confirm in the app. Connect's "Awake Time" matches the
    stage-derived value (18 min on 2026-10-19), so `stage_min["awake"]` is the one that lines up with the app.

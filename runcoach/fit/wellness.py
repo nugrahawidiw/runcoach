@@ -22,11 +22,12 @@ class Night:
     wake_date: dt.date
     sleep_start: dt.datetime            # local time
     sleep_end: dt.datetime              # local time
-    duration_min: float
+    duration_min: float                                # asleep time: deep + light + REM, as Garmin Connect
     score: int | None = None
     score_parts: dict = field(default_factory=dict)
     awake_min_summary: float | None = None
     stage_min: dict = field(default_factory=dict)      # ESTIMATE, see stage_minutes()
+    time_in_bed_min: float = 0.0                       # the whole sleep window, awake included
     hrv_last_night: float | None = None
     hrv_weekly: float | None = None
     hrv_status: str | None = None
@@ -143,7 +144,7 @@ def summarize_messages(messages: list[Message]) -> list[Night]:
         night = Night(wake_date=(end + offset).date(),
                       sleep_start=(start + offset).replace(tzinfo=None),
                       sleep_end=(end + offset).replace(tzinfo=None),
-                      duration_min=round(minutes, 1))
+                      duration_min=round(minutes, 1), time_in_bed_min=round(minutes, 1))
         if m.fields.get("unknown_9") is not None:
             night.awake_min_summary = round(m.fields["unknown_9"] / 60.0, 1)
 
@@ -155,6 +156,12 @@ def summarize_messages(messages: list[Message]) -> list[Night]:
         night.stress_sleep_avg = assess.get("average_stress_during_sleep")
         if levels_by_file.get(m.file):
             night.stage_min = stage_minutes(levels_by_file[m.file], start, end)
+            # Garmin Connect's "Sleep Duration" is deep + light + REM and excludes awake; the whole window
+            # stays available as time_in_bed_min. Verified against a Connect export for 2026-10-19
+            # (see docs/FIT_AND_WELLNESS_NOTES.md section 4). With no stage data, the window is all there is.
+            asleep = sum(v for k, v in night.stage_min.items() if k != "awake")
+            if asleep:
+                night.duration_min = round(asleep, 1)
 
         later = [f for ts, f in hrv_summaries if ts and end - dt.timedelta(hours=3) <= ts <= end + dt.timedelta(hours=36)]
         if later:

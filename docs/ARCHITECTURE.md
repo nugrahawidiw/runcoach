@@ -66,7 +66,8 @@ Decoupling dict: `first_pace, first_hr, second_pace, second_hr, pct`.
 
 ### Night (`fit/wellness.py`, one per sleep)
 `wake_date, sleep_start, sleep_end (local), duration_min, score, score_parts, awake_min_summary, stage_min
-(estimate), hrv_last_night, hrv_weekly, hrv_status, hrv_baseline (low_upper, balanced_lower, balanced_upper),
+(estimate), duration_min (deep+light+REM, as Garmin Connect; awake excluded), time_in_bed_min (whole window),
+hrv_last_night, hrv_weekly, hrv_status, hrv_baseline (low_upper, balanced_lower, balanced_upper),
 hrv_5min_high, sleep_low_hr, garmin_rhr, garmin_rhr_today, stress_sleep_avg, stress_export_avg,
 stress_export_max, resp_avg, body_battery_delta`.
 

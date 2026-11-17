@@ -25,10 +25,10 @@ Order matters: P0 items verify what is already built; build new features on veri
    2026-10-19 gives deep 1h49, light 4h04, REM 1h16, awake 18m; `stage_minutes` produces 109 / 244 / 76 / 18.
    Exact match on all four, so the "timestamp marks the end of the stage" reading is right and no change was
    needed. Score 79, HRV 31, RHR 56, stress 19 and BB +51 all matched as well.
-   **Found while checking: `duration_min` disagrees with Connect by exactly the awake time.** Connect's
-   "Sleep Duration" is deep + light + REM (7h09 on that night); runcoach reports the whole window (7h27).
-   Not changed, because 377 min for Oct 11-12 is a pinned golden number that includes awake and the owner
-   should decide which definition the reports carry. See FIT_AND_WELLNESS_NOTES section 4.
+   **Also fixed 2026-11-17, on the owner's decision:** `duration_min` now follows Connect and excludes
+   awake (deep + light + REM), with the whole window kept as the new `time_in_bed_min`. Oct 19 reports 7h09,
+   matching Connect. This moved the Oct 11-12 golden number from 377 to 370 min; 377 is now time in bed, and
+   COACHING_CONTEXT records both. Without stage data `duration_min` falls back to the window.
 4. **DONE 2026-11-17: tooling.** git initialized (`nugrahawidiw/runcoach`), `ruff` configured in
    `pyproject.toml` (line-length 135, `E,F,I,UP`; `E702`/`E741` ignored as house style), a pre-commit hook
    runs ruff on staged files plus the full suite, and `.github/workflows/ci.yml` runs ruff and pytest on

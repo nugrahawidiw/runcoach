@@ -49,7 +49,9 @@ def test_full_night_summary():
     (night,) = summarize_messages(night_messages())
     assert night.wake_date == dt.date(2026, 10, 12)               # local wake date, device offset +7 h
     assert night.sleep_start == dt.datetime(2026, 10, 11, 22, 22, 6)
-    assert night.duration_min == 377.0 and night.score == 75
+    # Garmin Connect's Sleep Duration excludes awake; the whole window stays as time_in_bed_min.
+    assert night.duration_min == 370.0 and night.time_in_bed_min == 377.0 and night.score == 75
+    assert night.duration_min == sum(v for k, v in night.stage_min.items() if k != "awake")
     assert night.awake_min_summary == pytest.approx(29.45, abs=0.06)
     assert night.hrv_last_night == 30.0 and night.hrv_weekly == 27.0 and night.hrv_status == "balanced"
     assert night.hrv_baseline == (25.0, 27.0, 34.0)
@@ -90,3 +92,11 @@ def test_wellness_table_shows_the_hrv_low_baseline(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "HRV baseline low / balanced" in out
     assert "25 / 27-34" in out
+
+
+def test_duration_falls_back_to_the_window_without_stage_data():
+    """With no sleep_level messages there are no stages to sum, so the window is all there is."""
+    msgs = [m for m in night_messages() if m.name != "sleep_level"]
+    (night,) = summarize_messages(msgs)
+    assert night.stage_min == {}
+    assert night.duration_min == night.time_in_bed_min == 377.0
