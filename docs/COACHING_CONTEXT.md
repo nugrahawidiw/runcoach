@@ -24,7 +24,7 @@ behind thresholds and wording. Personal training data: do not publish the reposi
 | Stride cadence | 181-191 spm |
 | Easy/long HR guide | about 145 bpm or lower |
 | HR zones (standing) | Z1 < 144, Z2 144-150, Z3 152-159, Z4 161-167, Z5 169+ |
-| HR zones as coded | `Profile.hr_zones` holds the lower bounds (144, 152, 161, 169). The table above leaves 151, 160 and 168 bpm in no zone; the code assigns each to the zone below so the seconds always add up. Change `hr_zones` in `profile.toml` to override. |
+| HR zones as coded | `Profile.hr_zones` holds the lower bounds (144, 152, 161, 169). The table above leaves 151, 160 and 168 bpm in no zone; the code assigns each to **the zone below**, confirmed by the owner 2026-11-17, so the seconds always add up. Change `hr_zones` in `profile.toml` to override. |
 | LTHR estimate | about 168-170 (default 169). The watch's own setting is 165; the watch max HR is 193 but the highest observed is about 177. Set `hr_rest`/`hr_max` to real values before trusting TRIMP. |
 
 ## 3. Training plan context (Summarecon block, 9 weeks to Nov 22, 2026)
@@ -42,6 +42,10 @@ behind thresholds and wording. Personal training data: do not publish the reposi
   - **Suggested, not objected to (Oct 11 long run):** if the sleep score is < 60 or HRV reads Unbalanced, cut the
     long run to 60 minutes; keep easy/long HR near or below about 145.
   - **Proposed, NOT confirmed (Oct 14 gate session):** run 3 reps instead of 4 under the same sleep/HRV condition.
+  - **Confirmed 2026-11-17:** a night counts as weak for `runcoach trends` when the sleep score is below 60,
+    HRV status reads Unbalanced, or HRV is below the balanced range; **3 consecutive weak nights** raise the
+    alert. The three conditions come from the rules above; the streak length was proposed by the tool and
+    agreed by the owner, and stays adjustable with `--weak-nights`.
   - All four are coded in `analysis/readiness.py` (`runcoach readiness --kind ...`), each tagged with the
     status above. The thresholds live in that module (`SLEEP_FLOOR = 60`, `INTERVALS_HR_CAP = 172`). The
     HR-172 rule is reported as an in-session watch item, not a pre-session decision, because last night's

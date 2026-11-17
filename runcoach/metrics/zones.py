@@ -6,7 +6,9 @@ and 168 bpm in no zone at all. Zones here are therefore defined by their
 *lower* bounds only (144, 152, 161, 169), which makes the partition total:
 every sample falls in exactly one zone and the seconds always sum to the
 number of measured samples. The effect is that each published gap bpm joins
-the zone below it (151 -> Z2, 160 -> Z3, 168 -> Z4).
+the zone below it (151 -> Z2, 160 -> Z3, 168 -> Z4). The owner confirmed that
+reading on 2026-11-17, so it is agreed behaviour rather than an open
+assumption; `Profile.hr_zones` still allows a different split.
 """
 
 from __future__ import annotations

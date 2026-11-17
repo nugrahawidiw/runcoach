@@ -84,7 +84,7 @@ def test_resting_hr_trend_needs_two_nights():
 def test_render_shows_the_alert_and_names_what_weak_means():
     md = render_markdown(summarize([night(8, score=50), night(9, score=50), night(10, score=50)]))
     assert "ALERT: 3 weak nights in a row" in md
-    assert "not an agreed rule" in md
+    assert "3 in a row raises the alert" in md
     assert "Resting HR: 58" in md
 
 

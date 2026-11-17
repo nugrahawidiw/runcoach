@@ -7,7 +7,7 @@ name = "runcoach"
 version = "0.1.0"
 description = "Run-coaching analysis (pace, GAP, decoupling, cadence, CTL) fed by the Strava API"
 readme = "README.md"
-# No licence declared: this is a private personal project and the choice is the owner's.
+# No licence declared, by the owner's decision (2026-11-17): private personal project, stays unlicensed.
 # The "Private :: Do Not Upload" classifier below makes an accidental PyPI upload fail.
 requires-python = ">=3.11"
 keywords = ["running", "strava", "garmin", "fit", "training-load"]

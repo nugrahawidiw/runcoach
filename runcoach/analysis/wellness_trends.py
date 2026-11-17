@@ -7,8 +7,8 @@ thresholds, a night counts as weak when any of these holds, each already establi
   * Garmin's HRV status reads Unbalanced, the same signal the confirmed readiness rule uses
   * last night's HRV sits below Garmin's own balanced range for this athlete (hrv_baseline[1])
 
-The one genuinely free choice is how many consecutive weak nights raise the alert. It defaults to 3 and is
-a parameter; nothing in the docs fixes it, so treat the default as a starting point, not an agreed rule.
+How many consecutive weak nights raise the alert was the one free choice here. It was proposed as 3 and
+agreed by the owner on 2026-11-17, so 3 is the agreed default; `--weak-nights` still changes it.
 
 Nothing is inferred from missing data: a night with no sleep score and no HRV is simply not weak, and the
 reasons list says what was actually seen.
@@ -22,7 +22,7 @@ from ..fit.wellness import Night
 from .readiness import SLEEP_FLOOR
 
 DEFAULT_WINDOW = 7          # nights in the rolling HRV mean; matches Garmin's own 7-day average
-DEFAULT_WEAK_NIGHTS = 3     # not from the docs: see the module docstring
+DEFAULT_WEAK_NIGHTS = 3     # agreed with the owner 2026-11-17; see the module docstring
 
 
 def _band(night: Night) -> str | None:
@@ -121,6 +121,6 @@ def render_markdown(result: dict) -> str:
     else:
         lines.append(f"- Weak-night streak: {result['weak_streak']} "
                      f"(alert at {result['weak_nights_threshold']})")
-    lines.append(f"- 'Weak' = sleep score < {SLEEP_FLOOR}, HRV Unbalanced, or HRV below the balanced range. "
-                 "The streak threshold is a parameter, not an agreed rule.")
+    lines.append(f"- 'Weak' = sleep score < {SLEEP_FLOOR}, HRV Unbalanced, or HRV below the balanced range; "
+                 f"{result['weak_nights_threshold']} in a row raises the alert (--weak-nights to change).")
     return "\n".join(lines)

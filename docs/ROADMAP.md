@@ -69,7 +69,7 @@ Order matters: P0 items verify what is already built; build new features on veri
    present, and `render_markdown` prints both. Verified on OCT11_LONG: Z1 35:31, Z2 27:38, Z3 6:37, and
    35:31 of 1:09:46 (51%) at or below the 145 guide. The standing zones have gaps (151, 160, 168 bpm), so
    zones are defined by lower bounds and each gap bpm joins the zone below; see `metrics/zones.py`.
-   Open question for the owner: if a gap bpm should instead count to the zone *above*, change `hr_zones`.
+   **Confirmed by the owner 2026-11-17:** a gap bpm joins the zone below, as coded. No longer open.
 4. **DONE 2026-11-17: charts.** `analysis/charts.py` + `--chart OUT.svg` on `analyze` and `fit-analyze`,
    taking the report dict, so the chart has the same inputs as the report. Pace (left axis, faster upwards)
    and cadence (right axis, dashed) per lap, with the easy/goal/tempo bands shaded behind them.
@@ -112,8 +112,8 @@ Order matters: P0 items verify what is already built; build new features on veri
    **"Weak" was not defined anywhere**, so it is built only from thresholds that already exist: sleep score
    below 60 (the confirmed rule in COACHING_CONTEXT section 3), HRV status Unbalanced (the same signal the
    confirmed readiness rule uses), or HRV below Garmin's balanced range for this athlete. The one free
-   choice is how many consecutive weak nights raise the alert: it defaults to 3, is a parameter, and both
-   the module and the rendered output say it is not an agreed rule. 17 tests.
+   choice was how many consecutive weak nights raise the alert; **3 was agreed by the owner 2026-11-17** and
+   remains adjustable with `--weak-nights`. 17 tests.
 
 ## P2
 1. **DONE 2026-11-17: dashboard generator.** `analysis/dashboard.py` + `runcoach dashboard [--out
@@ -136,8 +136,9 @@ Order matters: P0 items verify what is already built; build new features on veri
 4. **DONE 2026-11-17: packaging.** readme, keywords, classifiers and repository URL in `pyproject.toml`,
    plus a `Private :: Do Not Upload` classifier so an accidental PyPI upload fails. A wheel was built and
    installed into a clean venv, where `runcoach vdot 26:17 5000` gives VDOT 36.1 with only `requests` and
-   `fitdecode`. README documents both install routes. **No licence is declared**: the repository has no
-   LICENSE file and that choice is the owner's.
+   `fitdecode`. README documents both install routes. **No licence is declared**, by the owner's decision on
+   2026-11-17: the repository stays unlicensed and private, and the `Private :: Do Not Upload` classifier
+   guards against publishing it by accident.
 5. **NOT DONE, and recommended against: Strava webhooks instead of polling.** Strava pushes events to a
    public HTTPS callback that it validates when the subscription is created. This runs on one Windows
    laptop with no server, so it would need a tunnel or a hosted endpoint: permanent infrastructure, for a
