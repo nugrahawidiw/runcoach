@@ -1,5 +1,7 @@
 .env
-data/
+# Runtime cache at the repo root only. A bare "data/" also matched tests/data/, which silently kept the
+# recorded-response fixture out of the repo until CI caught it.
+/data/
 *.pyc
 __pycache__/
 .pytest_cache/
