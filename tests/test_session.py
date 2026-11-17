@@ -87,7 +87,7 @@ def test_the_gap_guard_can_be_tightened_to_reject_a_real_session():
 def test_render_lists_each_rep_and_the_band_count():
     md = render_markdown(structure(OCT9_STRIDES, kind="strides"))
     assert "| 1 | 4 |" in md and "Cadence in the stride band (181-191 spm): 5 of 6" in md
-    assert "First-minute overshoot is not computed" in md
+    assert "First-minute overshoot: not available" in md          # no streams passed here
 
 
 def test_render_says_so_when_there_is_no_structure():
@@ -100,6 +100,55 @@ def test_the_stride_cadence_band_is_not_applied_to_intervals():
     assert intervals["in_band"] is None and intervals["cadence_band"] is None
     assert all(r["cadence_in_band"] is None for r in intervals["reps"])
     assert "stride band" not in render_markdown(intervals)
+
+
+# ---- first-minute overshoot ---------------------------------------------------------------------
+def _streams_with_fast_opening(rows, fast_s=60, fast_factor=1.08):
+    """1 Hz streams where the first `fast_s` of every fast lap run `fast_factor` quicker."""
+    speed, hr, idx = [], [], 0
+    for secs, dist, _grade, lap_hr, _cad in rows:
+        base = (dist / secs) if secs else 0.0
+        quick = base * fast_factor
+        for t in range(int(secs)):
+            speed.append(quick if (base > 3.0 and t < fast_s) else base)
+            hr.append(lap_hr)
+        idx += int(secs)
+    return {"velocity_smooth": {"data": speed}, "heartrate": {"data": hr}}
+
+
+def test_overshoot_is_none_without_streams():
+    assert all(r["overshoot"] is None for r in structure(OCT7_INTERVALS)["reps"])
+
+
+def test_overshoot_flags_a_fast_first_minute():
+    st = detect_structure(rest_laps(OCT7_INTERVALS), Profile(), kind="intervals",
+                          streams=_streams_with_fast_opening(OCT7_INTERVALS))
+    o = st["reps"][0]["overshoot"]
+    assert o["pace_first"] < o["pace_rest"]            # first minute quicker
+    assert o["pace_delta"] < -5.0 and o["overshot"] is True
+    assert "OVERSHOT" in render_markdown(st)
+
+
+def test_an_even_rep_is_not_flagged():
+    st = detect_structure(rest_laps(OCT7_INTERVALS), Profile(), kind="intervals",
+                          streams=_streams_with_fast_opening(OCT7_INTERVALS, fast_factor=1.0))
+    o = st["reps"][0]["overshoot"]
+    assert abs(o["pace_delta"]) < 1.0 and o["overshot"] is False
+
+
+def test_overshoot_reports_heart_rate_alongside_pace():
+    st = detect_structure(rest_laps(OCT7_INTERVALS), Profile(), kind="intervals",
+                          streams=_streams_with_fast_opening(OCT7_INTERVALS))
+    o = st["reps"][0]["overshoot"]
+    assert o["hr_first"] is not None and o["hr_rest"] is not None and o["hr_delta"] is not None
+
+
+def test_short_reps_get_no_overshoot_because_there_is_nothing_to_compare():
+    """A 20 s stride cannot be split into a first minute and a remainder."""
+    st = detect_structure(rest_laps(OCT9_STRIDES), Profile(), kind="strides",
+                          streams=_streams_with_fast_opening(OCT9_STRIDES))
+    assert all(r["overshoot"] is None for r in st["reps"])
+    assert "First-minute overshoot: not available" in render_markdown(st)
 
 
 def test_detection_is_deterministic():

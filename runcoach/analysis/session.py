@@ -9,9 +9,11 @@ pace) guards against inventing structure where there is none: the Oct 11 long ru
 Consecutive fast laps are then merged into one rep, which is what makes a 6:00 work block spanning a 1 km
 auto-split and its remainder come out as a single rep rather than two.
 
-NOT implemented: first-minute overshoot, which the roadmap lists for this item. It needs the heart-rate and
-pace streams inside each rep, not lap averages. The laps alone cannot answer it, and guessing from a lap
-average would be worse than leaving it out.
+First-minute overshoot compares the opening 60 s of a rep with the rest of it, from the 1 Hz streams. Both
+sources name the streams the same way (`heartrate`, `velocity_smooth`), so one implementation covers Strava
+and FIT. Without streams, or on a rep too short to split, it is None rather than estimated from lap
+averages. A rep is flagged as an overshoot when its first minute is faster than the remainder by more than
+OVERSHOOT_S_PER_KM; that threshold is a choice, not something the docs fix.
 """
 
 from __future__ import annotations
@@ -21,6 +23,53 @@ from ..metrics.pace import fmt_pace
 
 MIN_REPS = 2
 DEFAULT_MIN_GAP_PCT = 15.0
+FIRST_MINUTE_S = 60
+MIN_REP_S_FOR_OVERSHOOT = 90      # below this there is no meaningful "rest of the rep" to compare against
+OVERSHOOT_S_PER_KM = 5.0          # a choice, not from the docs: see the module docstring
+
+
+def _series(streams: dict | None, key: str):
+    if not streams:
+        return None
+    block = streams.get(key)
+    return block.get("data") if isinstance(block, dict) else block
+
+
+def _mean(values):
+    usable = [v for v in values if v is not None]
+    return sum(usable) / len(usable) if usable else None
+
+
+def _overshoot(rep_laps: list[dict], streams: dict | None) -> dict | None:
+    """First 60 s of a rep against the remainder, in HR and pace."""
+    starts = [lap.get("start_index") for lap in rep_laps]
+    ends = [lap.get("end_index") for lap in rep_laps]
+    if streams is None or any(i is None for i in starts + ends):
+        return None
+    start, end = min(starts), max(ends)
+    if (end - start + 1) < MIN_REP_S_FOR_OVERSHOOT:
+        return None
+
+    hr = _series(streams, "heartrate")
+    speed = _series(streams, "velocity_smooth")
+    split = start + FIRST_MINUTE_S
+
+    def pace_of(values):
+        mean_speed = _mean(values)
+        return 1000.0 / mean_speed if mean_speed else None
+
+    out = {"hr_first": None, "hr_rest": None, "hr_delta": None,
+           "pace_first": None, "pace_rest": None, "pace_delta": None, "overshot": None}
+    if hr:
+        out["hr_first"], out["hr_rest"] = _mean(hr[start:split]), _mean(hr[split:end + 1])
+        if out["hr_first"] is not None and out["hr_rest"] is not None:
+            out["hr_delta"] = out["hr_first"] - out["hr_rest"]
+    if speed:
+        out["pace_first"], out["pace_rest"] = pace_of(speed[start:split]), pace_of(speed[split:end + 1])
+        if out["pace_first"] is not None and out["pace_rest"] is not None:
+            out["pace_delta"] = out["pace_first"] - out["pace_rest"]
+            out["overshot"] = out["pace_delta"] < -OVERSHOOT_S_PER_KM
+    return out
 
 
 def _pace(lap: dict) -> float | None:
@@ -54,7 +103,8 @@ def _merge(laps: list[dict]) -> dict:
 
 
 def detect_structure(laps: list[dict], profile: Profile | None = None,
-                     min_gap_pct: float = DEFAULT_MIN_GAP_PCT, kind: str | None = None) -> dict:
+                     min_gap_pct: float = DEFAULT_MIN_GAP_PCT, kind: str | None = None,
+                     streams: dict | None = None) -> dict:
     """Split laps into work reps and recoveries. `structured` is False when there is no clear split.
 
     `kind` only controls the cadence band: the 181-191 spm target is a strides target, so counting
@@ -94,7 +144,10 @@ def detect_structure(laps: list[dict], profile: Profile | None = None,
     if current:
         blocks.append(current)
 
-    reps = [_merge([lap for lap, _ in b]) for b in blocks if b[0][1]]
+    rep_blocks = [[lap for lap, _ in b] for b in blocks if b[0][1]]
+    reps = [_merge(block) for block in rep_blocks]
+    for rep, block in zip(reps, rep_blocks, strict=True):
+        rep["overshoot"] = _overshoot(block, streams)
     recoveries = [_merge([lap for lap, _ in b]) for b in blocks if not b[0][1]]
     if len(reps) < MIN_REPS:
         result["reason"] = f"only {len(reps)} fast block(s) found"
@@ -133,8 +186,20 @@ def render_markdown(structure: dict) -> str:
         lo, hi = structure["cadence_band"]
         lines.append(f"- Cadence in the stride band ({lo}-{hi} spm): {structure['in_band']} of "
                      f"{len(structure['reps'])}")
+    shown = [r for r in structure["reps"] if r.get("overshoot")]
+    if shown:
+        lines.append("- First minute vs the rest of each rep:")
+        for rep in shown:
+            o = rep["overshoot"]
+            pace = (f"{fmt_pace(o['pace_first'])} then {fmt_pace(o['pace_rest'])} "
+                    f"({o['pace_delta']:+.0f} s/km)") if o["pace_delta"] is not None else "pace n/a"
+            hr = f", HR {o['hr_first']:.0f} then {o['hr_rest']:.0f}" if o["hr_delta"] is not None else ""
+            flag = "  OVERSHOT" if o["overshot"] else ""
+            lines.append(f"    rep {rep['rep']}: {pace}{hr}{flag}")
     if structure["fade"]:
         fade = ", ".join(f"{d:+.1f} s/km" for d in structure["fade"])
         lines.append(f"- Fade between reps: {fade}")
-    lines.append("- First-minute overshoot is not computed: it needs the HR and pace streams inside each rep.")
+    if not shown:
+        lines.append("- First-minute overshoot: not available (needs streams, and reps of at least "
+                     f"{MIN_REP_S_FOR_OVERSHOOT} s).")
     return "\n".join(lines)

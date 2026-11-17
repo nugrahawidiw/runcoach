@@ -21,8 +21,14 @@ Order matters: P0 items verify what is already built; build new features on veri
    154.0, cadence 173.0 vs 172.9). The sub-bpm and 0.4 spm gaps are Strava averaging from higher-precision
    samples than the integer streams in the FIT file. No fixture added: the file is 189 KB and the laps are
    already pinned by OCT7_INTERVALS in `tests/fixtures.py`.
-3. **Settle sleep stages** against Garmin Connect (`FIT_AND_WELLNESS_NOTES.md` section 4). Update `stage_minutes` and
-   its test, or remove stage output if it cannot be made reliable.
+3. **DONE 2026-11-17: sleep stages settled, and the assumption was correct.** A Garmin Connect export for
+   2026-10-19 gives deep 1h49, light 4h04, REM 1h16, awake 18m; `stage_minutes` produces 109 / 244 / 76 / 18.
+   Exact match on all four, so the "timestamp marks the end of the stage" reading is right and no change was
+   needed. Score 79, HRV 31, RHR 56, stress 19 and BB +51 all matched as well.
+   **Found while checking: `duration_min` disagrees with Connect by exactly the awake time.** Connect's
+   "Sleep Duration" is deep + light + REM (7h09 on that night); runcoach reports the whole window (7h27).
+   Not changed, because 377 min for Oct 11-12 is a pinned golden number that includes awake and the owner
+   should decide which definition the reports carry. See FIT_AND_WELLNESS_NOTES section 4.
 4. **DONE 2026-11-17: tooling.** git initialized (`nugrahawidiw/runcoach`), `ruff` configured in
    `pyproject.toml` (line-length 135, `E,F,I,UP`; `E702`/`E741` ignored as house style), a pre-commit hook
    runs ruff on staged files plus the full suite, and `.github/workflows/ci.yml` runs ruff and pytest on
@@ -36,7 +42,7 @@ Order matters: P0 items verify what is already built; build new features on veri
    plus both missing-input paths. Missing sleep score or HRV status gives CANNOT DECIDE, naming the input.
    Open: the HR-172 rule is only a watch item (it needs in-session HR, which this command does not see), and
    `--legs-flat` is a manual flag because nothing in the data says how the legs feel.
-2. **MOSTLY DONE 2026-11-17: session-structure detection.** `analysis/session.py`; `analyze`/`fit-analyze`
+2. **DONE 2026-11-17: session-structure detection.** `analysis/session.py`; `analyze`/`fit-analyze`
    with `--kind intervals|strides` now print the rep table, and decoupling is suppressed for those kinds
    (it is meaningless there, COACHING_CONTEXT 1.1). Reps are found by sorting lap paces and splitting at the
    single largest gap -- parameter-free, and far steadier than a threshold: the gap is 75 s/km on Oct 7 and
@@ -46,8 +52,13 @@ Order matters: P0 items verify what is already built; build new features on veri
    The stride cadence band is applied only to strides.
    **Acceptance met**: reps 5:23 / 5:27 / 5:27, cadence 172.9 / 170.8 / 170.0, and 5 of 6 strides in band,
    all reproduced in `tests/test_session.py` from real Strava laps (`OCT7_INTERVALS`, `OCT9_STRIDES`).
-   **Not done: first-minute overshoot.** It needs the HR and pace streams inside each rep; lap averages
-   cannot answer it, and the rendered output says so. 16 tests.
+   **DONE 2026-11-17: first-minute overshoot**, from the 1 Hz streams: the opening 60 s of each rep against
+   the remainder, in pace and HR. Both sources name the streams the same way (`heartrate`,
+   `velocity_smooth`), so one implementation covers Strava and FIT. A rep is flagged when its first minute
+   is more than 5 s/km quicker than the rest -- that threshold is a choice, not from the docs. Reps under
+   90 s (strides) get None rather than a meaningless split, as does a report with no streams. On the real
+   Oct 7 watch file: rep 1 ran 5:13 then 5:29 (-16 s/km, OVERSHOT), reps 2 and 3 started conservatively.
+   21 tests.
 3. **DONE 2026-11-17: HR zone time-in-zone.** `metrics/zones.py` (`zone_for`, `time_in_zone`,
    `easy_guide_split`); `build_report` adds `time_in_zone` and `easy_guide` when a `heartrate` stream is
    present, and `render_markdown` prints both. Verified on OCT11_LONG: Z1 35:31, Z2 27:38, Z3 6:37, and

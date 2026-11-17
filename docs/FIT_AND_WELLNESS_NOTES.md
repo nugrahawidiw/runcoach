@@ -48,12 +48,21 @@ A daily zip usually contains one night. A folder of zips is handled one export a
   watch setting, not the location.
 
 ## 4. Open assumptions to verify
-1. **Sleep stages:** the code assumes each `sleep_level` timestamp marks the **end** of that stage. For the night of
-   2026-10-12 this gives deep 103, light 206, REM 61, awake 7 minutes. The alternative reading (timestamp = start)
-   gives only 47 minutes of deep sleep, which would not fit a deep-sleep score of 100. **Action:** compare one night
-   with Garmin Connect and fix `stage_minutes` if it disagrees.
+1. **Sleep stages: SETTLED 2026-11-17, the assumption was right.** Each `sleep_level` timestamp marks the
+   **end** of that stage. Checked against a Garmin Connect export for the night of 2026-10-19: Connect shows
+   deep 1h49, light 4h04, REM 1h16, awake 18m, and `stage_minutes` gives 109 / 244 / 76 / 18. All four match
+   exactly. Score, HRV, resting HR, stress and body battery matched that night too.
+   **But `duration_min` does not match Connect's "Sleep Duration".** Connect reports 7h09 (429 min) and
+   runcoach reports 7h27 (447 min); the difference is exactly the 18 minutes awake. Connect's Sleep Duration
+   is deep + light + REM and **excludes awake**, while `duration_min` is the whole sleep window. A second
+   night (Nov 15: 1h25 + 4h24 + 22m = 6h11, awake 49m shown separately) confirms the same rule.
+   **Open decision for the owner, not changed unilaterally:** `COACHING_CONTEXT.md` records 377 min for the
+   night of 2026-10-11/12 as validated by hand, and that figure includes awake (103 + 206 + 61 + 7). Under
+   Connect's definition the same night is 370 min. Changing `duration_min` would move a pinned golden number,
+   so it needs the owner to say which number the reports should carry.
 2. `awake_min_summary` (summary field, 29.4 min on that night) differs from the stage-derived awake minutes (7).
-   They probably measure different things; confirm in the app.
+   They probably measure different things; confirm in the app. Connect's "Awake Time" matches the
+   stage-derived value (18 min on 2026-10-19), so `stage_min["awake"]` is the one that lines up with the app.
 3. `stress_export_avg/max` cover everything in that export (roughly the day before the morning of export), not a
    calendar day. Prefer `stress_sleep_avg` for night-to-night comparisons.
 4. `sleep_low_hr` (median of the 5 lowest HR samples in the sleep window) and Garmin's `resting_heart_rate` differ

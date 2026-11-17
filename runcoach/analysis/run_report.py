@@ -90,11 +90,13 @@ def build_report(activity: dict, laps: list[dict], streams: dict | None,
             "lap": n, "distance_m": dist, "moving_s": secs, "pace": pace,
             "gap": pace / gap_factor(grade), "grade_pct": grade,
             "avg_hr": lap["avg_hr"], "cadence_spm": cad,
+            "start_index": s, "end_index": e,
         })
 
     raw_laps_normalized = [{"lap": r["lap"], "distance": r["distance_m"], "moving_time": r["moving_s"],
                             "average_heartrate": r["avg_hr"],
-                            "average_cadence": (r["cadence_spm"] / 2.0) if r["cadence_spm"] else None}
+                            "average_cadence": (r["cadence_spm"] / 2.0) if r["cadence_spm"] else None,
+                            "start_index": r["start_index"], "end_index": r["end_index"]}
                            for r in rows]
     total_s = sum(r["moving_s"] for r in rows)
     total_m = sum(r["distance_m"] for r in rows)
@@ -133,7 +135,8 @@ def build_report(activity: dict, laps: list[dict], streams: dict | None,
                                 "at_or_below_s": at_or_below, "above_s": above}
     # Structured sessions: decoupling is meaningless on intervals and strides (COACHING_CONTEXT 1.1),
     # so it is left out rather than printed and explained away.
-    report["structure"] = detect_structure(raw_laps_normalized, profile, kind=kind) if kind in STRUCTURED_KINDS else None
+    report["structure"] = (detect_structure(raw_laps_normalized, profile, kind=kind, streams=streams)
+                           if kind in STRUCTURED_KINDS else None)
     if kind in STRUCTURED_KINDS:
         report["decoupling_raw"] = report["decoupling_gap"] = None
     else:

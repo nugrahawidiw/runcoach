@@ -129,7 +129,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
 
 ## Definition of done
 No step here is satisfied by inspection. Run the thing.
-1. `python -m pytest` actually run, and the real count reported (148 passed today). Never write "tests pass"
+1. `python -m pytest` actually run, and the real count reported (153 passed today). Never write "tests pass"
    without the output in front of you. If you did not run them, say so.
 2. New behaviour has a test. A changed formula shows the pinned numbers before and after.
 3. Docs updated: `python scripts/gen_api_docs.py` after signature changes; edit `docs/*.md` if behaviour or

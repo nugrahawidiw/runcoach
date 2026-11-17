@@ -68,6 +68,7 @@ behind thresholds and wording. Personal training data: do not publish the reposi
 | Rest-day step from (18.20, 19.78) | (17.77, 17.15), TSB +0.62 | `test_metrics` |
 | Banister TRIMP, 40 min at 143 bpm, rest 55, max 180 | about 69.7 | `test_metrics` |
 | Wellness night Oct 11-12 | score 75, 377 min, HRV 30 (7-day 27, balanced 27-34), BB +51 | validated by hand on real data |
+| Wellness night Oct 18-19 | score 79, stages deep 109 / light 244 / REM 76 / awake 18, HRV 31, RHR 56, stress 19, BB +51 | matches the Garmin Connect export exactly (2026-11-17); Connect's Sleep Duration 7h09 excludes awake |
 
 ## 6. Data quirks learned the hard way
 - Strava streams: the `resolution` parameter downsamples **differently per request**. Never mix arrays from separate
