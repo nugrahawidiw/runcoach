@@ -90,7 +90,7 @@ def test_weekly_command_reads_the_cache_and_prints_the_table(tmp_path, monkeypat
     assert main(["weekly", "--weeks", "1"]) == 0
     out = capsys.readouterr().out
     assert "| 2026-10-05 | 2 | 15.74 km | 1:49:45 |" in out
-    assert "Planned vs actual is not shown" in out
+    assert "Planned vs actual needs a plan file" in out
 
 
 def test_weekly_command_exits_cleanly_with_an_empty_cache(tmp_path, monkeypatch):
@@ -102,3 +102,22 @@ def test_weekly_command_exits_cleanly_with_an_empty_cache(tmp_path, monkeypatch)
     with pytest.raises(SystemExit) as exc:
         main(["weekly"])
     assert "sync" in str(exc.value)
+
+
+def test_weekly_shows_planned_columns_when_a_plan_is_given():
+    """Closes the gap left in P1.6: planned vs actual, now that P1.7 provides the plan as data."""
+    from runcoach.analysis.plan import PlannedSession
+
+    plan = [PlannedSession(dt.date(2026, 10, 8), "easy", distance_km=6.0),
+            PlannedSession(dt.date(2026, 10, 11), "long", distance_km=16.0)]
+    (w,) = summarize_weeks([EASY, LONG], LOADS, weeks=1, plan=plan)
+    assert w["planned_runs"] == 2 and w["planned_km"] == 22.0
+    md = render_markdown([w])
+    assert "Runs (plan)" in md and "| 2 (2) |" in md and "15.74 (22) km" in md
+    assert "Planned figures in brackets." in md
+
+
+def test_weekly_omits_planned_columns_without_a_plan():
+    (w,) = summarize_weeks([EASY, LONG], LOADS, weeks=1)
+    assert w["planned_runs"] is None and w["planned_km"] is None
+    assert "Runs (plan)" not in render_markdown([w])

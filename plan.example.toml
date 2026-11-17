@@ -1,0 +1,28 @@
+# Training plan as data (roadmap P1.7). Copy to plan.toml and edit.
+# TOML, not YAML, because tomllib is in the standard library and profile.toml already uses it.
+# Dates are plain TOML dates. target_pace is mm:ss per km. Everything except date and kind is optional.
+
+[[session]]
+date = 2026-10-07
+kind = "intervals"
+title = "4 x 1 km"
+target_pace = "5:02"
+distance_km = 10.0
+
+[[session]]
+date = 2026-10-08
+kind = "easy"
+title = "Easy 6 km"
+distance_km = 6.0
+
+[[session]]
+date = 2026-10-09
+kind = "strides"
+title = "Strides 6 x 20 s"
+
+[[session]]
+date = 2026-10-11
+kind = "long"
+title = "Long run"
+distance_km = 16.0
+target_pace = "6:58"

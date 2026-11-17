@@ -2,10 +2,8 @@
 
 Weeks run Monday to Sunday (docs/COACHING_CONTEXT.md section 3).
 
-Deliberately NOT included: planned vs actual. The roadmap lists it under this item, but the plan exists only
-as prose in COACHING_CONTEXT ("4-5 runs, one quality session, a long run, strides"), not as data this code
-can read. Comparing against a plan invented here would be worse than omitting it. Roadmap P1.7 ("plan as
-data") is the item that unblocks it; once a plan file exists, add the planned columns here.
+Planned vs actual appears only when a plan is supplied (see analysis/plan.py, roadmap P1.7). Without one the
+planned columns are omitted rather than compared against a plan invented here.
 """
 
 from __future__ import annotations
@@ -25,7 +23,7 @@ def week_start(day: dt.date) -> dt.date:
 
 
 def summarize_weeks(activities: Iterable[dict], daily_loads: Mapping[dt.date, float], weeks: int = 4,
-                    ctl0: float = 0.0, atl0: float = 0.0) -> list[dict]:
+                    ctl0: float = 0.0, atl0: float = 0.0, plan: list | None = None) -> list[dict]:
     """The last `weeks` Monday-to-Sunday weeks, newest last. Empty when there are no activities.
 
     `activities` are Strava-shaped (`start_date_local`, `distance`, `moving_time`). Load numbers come from
@@ -69,7 +67,12 @@ def summarize_weeks(activities: Iterable[dict], daily_loads: Mapping[dt.date, fl
             "ctl": point.ctl if point else None,
             "atl": point.atl if point else None,
             "tsb": point.tsb if point else None,
+            "planned_runs": None, "planned_km": None,
         })
+        if plan is not None:
+            planned = [s for s in plan if start <= s.date <= end]
+            out[-1]["planned_runs"] = len(planned)
+            out[-1]["planned_km"] = sum(s.distance_km or 0.0 for s in planned)
     return out
 
 
@@ -77,18 +80,29 @@ def render_markdown(summaries: list[dict]) -> str:
     """One row per week. Load columns are blank for a week with no cached load data."""
     if not summaries:
         return "No cached runs. Run `runcoach sync` first."
-    lines = [
-        "| Week (Mon-Sun) | Runs | Distance | Time | Avg pace | Longest | CTL | ATL | TSB |",
-        "|---|---|---|---|---|---|---|---|---|",
-    ]
+    with_plan = summaries[0]["planned_runs"] is not None
+    if with_plan:
+        lines = [
+            "| Week (Mon-Sun) | Runs (plan) | Distance (plan) | Time | Avg pace | Longest | CTL | ATL | TSB |",
+            "|---|---|---|---|---|---|---|---|---|",
+        ]
+    else:
+        lines = [
+            "| Week (Mon-Sun) | Runs | Distance | Time | Avg pace | Longest | CTL | ATL | TSB |",
+            "|---|---|---|---|---|---|---|---|---|",
+        ]
     for w in summaries:
         pace = fmt_pace(w["avg_pace"]) if w["avg_pace"] else "-"
         ctl = f"{w['ctl']:.1f}" if w["ctl"] is not None else "-"
         atl = f"{w['atl']:.1f}" if w["atl"] is not None else "-"
         tsb = f"{w['tsb']:+.1f}" if w["tsb"] is not None else "-"
-        lines.append(f"| {w['week_start']} | {w['runs']} | {w['distance_m'] / 1000.0:.2f} km "
+        runs = f"{w['runs']} ({w['planned_runs']})" if with_plan else str(w["runs"])
+        km = (f"{w['distance_m'] / 1000.0:.2f} ({w['planned_km']:g}) km" if with_plan
+              else f"{w['distance_m'] / 1000.0:.2f} km")
+        lines.append(f"| {w['week_start']} | {runs} | {km} "
                      f"| {fmt_time(w['moving_s'])} | {pace} | {w['longest_m'] / 1000.0:.2f} km "
                      f"| {ctl} | {atl} | {tsb} |")
     lines.append("")
-    lines.append("Planned vs actual is not shown: the plan is not yet available as data (roadmap P1.7).")
+    lines.append("Planned figures in brackets." if with_plan
+                 else "Planned vs actual needs a plan file: see `runcoach plan` (plan.example.toml).")
     return "\n".join(lines)

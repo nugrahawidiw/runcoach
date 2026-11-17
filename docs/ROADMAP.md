@@ -48,11 +48,17 @@ Order matters: P0 items verify what is already built; build new features on veri
    Mon-Sun per section 3 above): runs, distance, moving time, average pace, longest run, and CTL/ATL/TSB read
    at the week's end. Weeks with no runs are still listed so a rest week and its rising TSB show up; load
    columns are blank for weeks before the cache starts rather than guessed. 12 tests.
-   **Not done: planned vs actual.** The plan exists only as prose in COACHING_CONTEXT, not as data, and
-   comparing against an invented plan would be worse than omitting it. Blocked on P1.7 (plan as data); the
-   rendered output says so. Add the planned columns to `weekly.py` once a plan file exists.
-7. **Plan as data:** a `plan.yaml` (or TOML) with sessions and targets; compare plan vs actual; export `.ics` using the
-   `icalendar` library (hand-built `.ics` previously broke on line folding).
+   Planned vs actual was added once P1.7 landed: `runcoach weekly --plan plan.toml` shows planned runs and
+   km in brackets. Without `--plan` the planned columns are omitted rather than guessed.
+7. **DONE 2026-11-17: plan as data.** `analysis/plan.py` + `runcoach plan plan.toml [--ics OUT] [--json]`,
+   and `runcoach weekly --plan plan.toml` adds planned runs/km per week (this closes the gap left in P1.6).
+   **TOML, not YAML**: `tomllib` is stdlib and `profile.toml` already uses it, so the plan costs no new
+   dependency. See `plan.example.toml`. Unknown keys and a missing date/kind raise rather than being ignored.
+   Matching is by date only: a planned session with a run that day is DONE, without one MISSED, and a run on
+   an unplanned day UNPLANNED. Distance short of plan is reported, not judged -- deciding whether a run
+   *satisfied* a session needs P1.2. `.ics` export uses `icalendar` (the `ics` extra, imported lazily, so the
+   core install stays requests + fitdecode); a test asserts no line exceeds 75 octets, which is the folding
+   bug the roadmap warned about. 13 tests.
 8. **Wellness trends:** rolling HRV vs balanced range, resting-HR trend, a "weak markers for N nights" detector.
 
 ## P2: later

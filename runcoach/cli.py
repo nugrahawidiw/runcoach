@@ -9,6 +9,7 @@ import sys
 from collections import defaultdict
 from datetime import date, timedelta
 
+from .analysis import plan as plan_data
 from .analysis import readiness as readiness_rules
 from .analysis import weekly as weekly_summary
 from .analysis.run_report import build_report, render_markdown
@@ -101,11 +102,28 @@ def _daily_loads(cache, profile, source: str) -> dict[date, float]:
     return daily
 
 
+def cmd_plan(args):
+    plan = plan_data.load_plan(args.path)
+    if args.ics:
+        with open(args.ics, "wb") as fh:
+            fh.write(plan_data.to_ics(plan))
+        print(f"wrote {args.ics} ({len(plan)} sessions)")
+        return
+    cache = _cache()
+    activities = [a for a in (cache.get("activity", aid) for aid in cache.ids("activity")) if a]
+    comparison = plan_data.compare(plan, activities)
+    if args.json:
+        print(json.dumps(comparison.rows, indent=2))
+    else:
+        print(plan_data.render_markdown(comparison))
+
+
 def cmd_weekly(args):
     cache, profile = _cache(), load_profile()
     activities = [a for a in (cache.get("activity", aid) for aid in cache.ids("activity")) if a]
+    plan = plan_data.load_plan(args.plan) if args.plan else None
     summaries = weekly_summary.summarize_weeks(activities, _daily_loads(cache, profile, args.source),
-                                               weeks=args.weeks, ctl0=args.ctl0, atl0=args.atl0)
+                                               weeks=args.weeks, ctl0=args.ctl0, atl0=args.atl0, plan=plan)
     if not summaries:
         sys.exit("No cached runs. Run `runcoach sync` first.")
     if args.json:
@@ -269,8 +287,15 @@ def main(argv=None) -> int:
     wk.add_argument("--source", choices=["suffer", "trimp"], default="suffer")
     wk.add_argument("--ctl0", type=float, default=0.0)
     wk.add_argument("--atl0", type=float, default=0.0)
+    wk.add_argument("--plan", help="plan.toml; adds planned runs and km per week")
     wk.add_argument("--json", action="store_true")
     wk.set_defaults(fn=cmd_weekly)
+
+    pl = sub.add_parser("plan", help="plan vs actual from plan.toml, or export the plan as .ics")
+    pl.add_argument("path", help="plan.toml (see plan.example.toml)")
+    pl.add_argument("--ics", metavar="OUT.ics", help="write the plan as a calendar file instead of comparing")
+    pl.add_argument("--json", action="store_true")
+    pl.set_defaults(fn=cmd_plan)
 
     v = sub.add_parser("vdot", help="VDOT and equivalent times")
     v.add_argument("time", help="e.g. 26:17 or 2:08:21")

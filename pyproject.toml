@@ -10,7 +10,9 @@ requires-python = ">=3.11"
 dependencies = ["requests>=2.31", "fitdecode>=0.10"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.14", "pre-commit>=4"]
+dev = ["pytest>=8", "ruff>=0.14", "pre-commit>=4", "icalendar>=6"]
+# Only needed for `plan --ics`. The core install stays requests + fitdecode.
+ics = ["icalendar>=6"]
 
 [project.scripts]
 runcoach = "runcoach.cli:main"

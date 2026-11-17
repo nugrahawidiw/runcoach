@@ -103,6 +103,19 @@ CTL/ATL/TSB line read at the week's end. Weeks with no runs still appear, so a r
 are visible. Load columns are blank for weeks before the cache starts rather than filled with a guess.
 Planned vs actual is not included yet: the plan is not available as data (roadmap P1.7).
 
+## Plan vs actual
+
+```
+python -m runcoach plan plan.toml                  # plan vs what the cache actually holds
+python -m runcoach plan plan.toml --ics plan.ics   # all-day calendar events
+python -m runcoach weekly --plan plan.toml         # planned runs and km per week, in brackets
+```
+
+Copy `plan.example.toml` to `plan.toml`. It is TOML (not YAML) because `tomllib` is in the standard library,
+so the plan needs no extra package. Sessions are matched to runs **by date**: DONE if something was run that
+day, MISSED if not, UNPLANNED for a run on a day with nothing planned. Distance short of plan is shown but
+not judged. The `.ics` export needs the `icalendar` package: `pip install -e ".[ics]"`.
+
 ## Readiness
 
 ```
