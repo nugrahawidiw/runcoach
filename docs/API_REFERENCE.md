@@ -57,6 +57,15 @@ Weekly training summary: distance, time, runs and the CTL/ATL/TSB line at each w
 - `summarize_weeks(activities: Iterable[dict], daily_loads: Mapping[dt.date, float], weeks: int=4, ctl0: float=0.0, atl0: float=0.0, plan: list | None=None) -> list[dict]` The last `weeks` Monday-to-Sunday weeks, newest last. Empty when there are no activities.
 - `render_markdown(summaries: list[dict]) -> str` One row per week. Load columns are blank for a week with no cached load data.
 
+### `runcoach/analysis/wellness_trends.py`
+
+Wellness trends: rolling HRV against Garmin's balanced range, resting-HR trend, and weak-night runs.
+
+- `_band(night: Night) -> str | None` *(private)* Where last night's HRV sits against Garmin's balanced range: below, in, above, or None.
+- `_reasons(night: Night, band: str | None) -> list[str]` *(private)*
+- `summarize(nights: Sequence[Night], window: int=DEFAULT_WINDOW, weak_nights: int=DEFAULT_WEAK_NIGHTS) -> dict` Per-night rows oldest first, plus the trailing weak-night streak and the resting-HR trend.
+- `render_markdown(result: dict) -> str`
+
 ### `runcoach/cli.py`
 
 Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | wellness
@@ -78,6 +87,7 @@ Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | w
 - `cmd_fit_analyze(args)`
 - `cmd_fit_import(args)`
 - `_fmt(value, spec='', dash='-')` *(private)*
+- `cmd_trends(args)`
 - `cmd_readiness(args)`
 - `cmd_wellness(args)`
 - `main(argv=None) -> int`

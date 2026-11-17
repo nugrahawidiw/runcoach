@@ -103,6 +103,18 @@ CTL/ATL/TSB line read at the week's end. Weeks with no runs still appear, so a r
 are visible. Load columns are blank for weeks before the cache starts rather than filled with a guess.
 Planned vs actual is not included yet: the plan is not available as data (roadmap P1.7).
 
+## Wellness trends
+
+```
+python -m runcoach trends "D:\Garmin"                      # a folder of nightly zips
+python -m runcoach trends "D:\Garmin" --weak-nights 4
+```
+
+Per night: sleep score, HRV and its rolling mean, where HRV sits against Garmin's balanced range, status and
+resting HR; then the resting-HR trend and how many weak nights have run consecutively. A night is weak when
+the sleep score is below 60, HRV status reads Unbalanced, or HRV is below the balanced range. The streak
+threshold that raises the alert is a parameter, not an agreed coaching rule.
+
 ## Charts
 
 ```

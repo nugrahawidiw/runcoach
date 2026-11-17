@@ -13,6 +13,7 @@ from .analysis import charts as chart_svg
 from .analysis import plan as plan_data
 from .analysis import readiness as readiness_rules
 from .analysis import weekly as weekly_summary
+from .analysis import wellness_trends
 from .analysis.run_report import build_report, render_markdown
 from .config import data_dir, load_env, load_profile
 from .fit.activity import activity_from_messages, cache_id
@@ -192,6 +193,19 @@ def _fmt(value, spec="", dash="-"):
     return dash if value is None else format(value, spec)
 
 
+def cmd_trends(args):
+    nights = []
+    for _label, msgs in iter_groups(args.path):
+        nights.extend(summarize_messages(msgs))
+    if not nights:
+        sys.exit("No full night of sleep data found in that path.")
+    result = wellness_trends.summarize(nights, window=args.window, weak_nights=args.weak_nights)
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        print(wellness_trends.render_markdown(result))
+
+
 def cmd_readiness(args):
     nights = []
     for _label, msgs in iter_groups(args.path):
@@ -309,6 +323,15 @@ def main(argv=None) -> int:
     pl.add_argument("--ics", metavar="OUT.ics", help="write the plan as a calendar file instead of comparing")
     pl.add_argument("--json", action="store_true")
     pl.set_defaults(fn=cmd_plan)
+
+    tr = sub.add_parser("trends", help="rolling HRV, resting-HR trend and weak-night streak")
+    tr.add_argument("path", help="Garmin wellness FIT file, zip or folder (all nights in it are used)")
+    tr.add_argument("--window", type=int, default=wellness_trends.DEFAULT_WINDOW,
+                    help="nights in the rolling HRV mean")
+    tr.add_argument("--weak-nights", type=int, default=wellness_trends.DEFAULT_WEAK_NIGHTS,
+                    help="consecutive weak nights that raise the alert")
+    tr.add_argument("--json", action="store_true")
+    tr.set_defaults(fn=cmd_trends)
 
     v = sub.add_parser("vdot", help="VDOT and equivalent times")
     v.add_argument("time", help="e.g. 26:17 or 2:08:21")

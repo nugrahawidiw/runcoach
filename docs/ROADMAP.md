@@ -65,7 +65,15 @@ Order matters: P0 items verify what is already built; build new features on veri
    *satisfied* a session needs P1.2. `.ics` export uses `icalendar` (the `ics` extra, imported lazily, so the
    core install stays requests + fitdecode); a test asserts no line exceeds 75 octets, which is the folding
    bug the roadmap warned about. 13 tests.
-8. **Wellness trends:** rolling HRV vs balanced range, resting-HR trend, a "weak markers for N nights" detector.
+8. **DONE 2026-11-17: wellness trends.** `analysis/wellness_trends.py` + `runcoach trends PATH
+   [--window 7] [--weak-nights 3] [--json]`. Per night: sleep score, HRV, a rolling HRV mean over `--window`
+   nights, where that HRV sits against Garmin's own balanced range (below / in / above), status and resting
+   HR. Plus the resting-HR trend (first, last, delta, mean) and the trailing weak-night streak.
+   **"Weak" was not defined anywhere**, so it is built only from thresholds that already exist: sleep score
+   below 60 (the confirmed rule in COACHING_CONTEXT section 3), HRV status Unbalanced (the same signal the
+   confirmed readiness rule uses), or HRV below Garmin's balanced range for this athlete. The one free
+   choice is how many consecutive weak nights raise the alert: it defaults to 3, is a parameter, and both
+   the module and the rendered output say it is not an agreed rule. 17 tests.
 
 ## P2: later
 - Dashboard generator (static HTML) fed by the cache; the previous hand-made dashboard is a design reference.
