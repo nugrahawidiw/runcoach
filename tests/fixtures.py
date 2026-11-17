@@ -54,3 +54,44 @@ def activity_for(rows, day, name="Run", suffer=None):
     if suffer is not None:
         act["suffer_score"] = suffer
     return act
+
+
+# Real laps from Strava for the two structured sessions (roadmap P1.2), fetched 2026-11-17.
+# Sanitized: laps only. No GPS, no segment or place names, no gear, no activity ids.
+# Same column order as the fixtures above: (moving_s, distance_m, grade_pct, avg_hr, cadence_rpm_one_foot)
+# Self-checking: tests/test_session.py reproduces the documented golden numbers from these rows, so a
+# transcription slip would fail the suite rather than go unnoticed.
+OCT7_INTERVALS = [
+    (426, 1000.0, -0.0998602, 124.421, 83.7106),    # warm-up
+    (174, 423.26, 0.0943174, 135.201, 84.454),      # warm-up
+    (324, 1000.0, -0.160562, 153.613, 86.483),      # rep 1
+    (36, 113.44, 0.365631, 158.029, 86.4),          # rep 1 (remainder of the 6:00 block)
+    (120, 241.43, -0.0846382, 149.941, 81.161),     # recovery
+    (327, 1000.0, -0.120361, 158.132, 85.4663),     # rep 2
+    (33, 99.95, 0.40568, 161.697, 84.6667),         # rep 2
+    (120, 252.83, 0.241449, 155.273, 80.8547),      # recovery
+    (327, 1000.0, -0.120084, 161.165, 84.9388),     # rep 3
+    (33, 101.27, 0.199203, 163.25, 85.4688),        # rep 3
+    (414, 1000.0, 0.100705, 157.918, 83.1501),      # cool-down
+    (306, 754.73, -0.584718, 158.296, 83.6809),     # cool-down
+]
+
+OCT9_STRIDES = [
+    (417, 1000.0, 0.179748, 129.254, 84.6859),
+    (407, 1000.0, 0.060048, 139.436, 85.6773),
+    (181, 435.85, 0.0460405, 141.589, 85.9833),
+    (20, 85.18, -0.495663, 146.611, 93.1111),       # stride 1
+    (45, 107.72, -0.385356, 154.545, 85.25),
+    (20, 97.51, -0.42735, 154.684, 96.8421),        # stride 2
+    (45, 114.36, -0.182149, 158.977, 83.3182),
+    (20, 86.86, 2.82686, 159.263, 94.7368),         # stride 3
+    (45, 105.7, 0.604839, 160.636, 82.3409),
+    (20, 86.96, 0.962696, 159.053, 92.6842),        # stride 4
+    (45, 93.04, 0.669643, 161.409, 81.4545),
+    (20, 89.59, 1.39211, 156.789, 91.7895),         # stride 5
+    (45, 95.71, 0.870511, 157.698, 81.186),
+    (20, 90.66, -0.685714, 161.368, 91.8947),       # stride 6
+    (424, 1000.0, -0.442478, 150.668, 82.3007),
+    (410, 1000.0, 0.30027, 151.839, 83.3985),
+    (216, 516.0, -0.389105, 151.606, 83.3005),
+]

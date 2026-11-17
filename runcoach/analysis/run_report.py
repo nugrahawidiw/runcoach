@@ -9,6 +9,10 @@ from ..metrics.decoupling import decoupling, efficiency
 from ..metrics.gap import gap_factor
 from ..metrics.pace import fmt_pace, fmt_time
 from ..metrics.zones import ZONE_NAMES, easy_guide_split, time_in_zone
+from .session import detect_structure
+from .session import render_markdown as render_structure
+
+STRUCTURED_KINDS = ("intervals", "strides")
 
 
 def _stream(streams: dict | None, key: str):
@@ -88,6 +92,10 @@ def build_report(activity: dict, laps: list[dict], streams: dict | None,
             "avg_hr": lap["avg_hr"], "cadence_spm": cad,
         })
 
+    raw_laps_normalized = [{"lap": r["lap"], "distance": r["distance_m"], "moving_time": r["moving_s"],
+                            "average_heartrate": r["avg_hr"],
+                            "average_cadence": (r["cadence_spm"] / 2.0) if r["cadence_spm"] else None}
+                           for r in rows]
     total_s = sum(r["moving_s"] for r in rows)
     total_m = sum(r["distance_m"] for r in rows)
     geq_m = sum(r["distance_m"] * gap_factor(r["grade_pct"]) for r in rows)
@@ -123,10 +131,16 @@ def build_report(activity: dict, laps: list[dict], streams: dict | None,
         at_or_below, above = easy_guide_split(hr_stream, profile.easy_hr_guide)
         report["easy_guide"] = {"guide": profile.easy_hr_guide,
                                 "at_or_below_s": at_or_below, "above_s": above}
-    d_raw = decoupling(dec_inputs, use_gap=False)
-    d_gap = decoupling(dec_inputs, use_gap=True)
-    report["decoupling_raw"] = asdict(d_raw) if d_raw else None
-    report["decoupling_gap"] = asdict(d_gap) if d_gap else None
+    # Structured sessions: decoupling is meaningless on intervals and strides (COACHING_CONTEXT 1.1),
+    # so it is left out rather than printed and explained away.
+    report["structure"] = detect_structure(raw_laps_normalized, profile, kind=kind) if kind in STRUCTURED_KINDS else None
+    if kind in STRUCTURED_KINDS:
+        report["decoupling_raw"] = report["decoupling_gap"] = None
+    else:
+        d_raw = decoupling(dec_inputs, use_gap=False)
+        d_gap = decoupling(dec_inputs, use_gap=True)
+        report["decoupling_raw"] = asdict(d_raw) if d_raw else None
+        report["decoupling_gap"] = asdict(d_gap) if d_gap else None
 
     if kind in ("easy", "long"):
         lo, hi = profile.easy_band
@@ -165,6 +179,10 @@ def render_markdown(rep: dict) -> str:
                          f"{fmt_pace(d['second_pace'])} @ {d['second_hr']:.1f})")
     if rep["efficiency"]:
         lines.append(f"- Efficiency (speed per heartbeat x1000): {rep['efficiency']:.2f}")
+    if rep.get("structure") and rep["structure"]["structured"]:
+        lines.append("")
+        lines.append(render_structure(rep["structure"]))
+        lines.append("")
     if rep["time_in_zone"]:
         parts = " ".join(f"{z} {fmt_time(rep['time_in_zone'][z])}" for z in ZONE_NAMES)
         lines.append(f"- Time in zone: {parts}")

@@ -14,8 +14,13 @@ Order matters: P0 items verify what is already built; build new features on veri
    - `load` over a short history starts from zero and understates CTL; it now prints a NOTE (seed with `--ctl0/--atl0`).
    Still open: add a **sanitized recorded-response fixture** from `data/cache/` (remove names, locations, ids) so the
    REST shapes are pinned by a test.
-2. **Validate the FIT run reader on a real watch file.** Compare with Strava/Garmin Connect (distance, time, HR,
-   cadence, lap paces). Add a small sanitized fixture or a synthetic file that reproduces any difference found.
+2. **DONE 2026-11-17: FIT run reader validated on a real watch file.** `24633064698_ACTIVITY.fit`, the
+   Oct 7 intervals run, read with `fit-analyze` and compared against the same run from Strava:
+   distance 6993.3 m vs 6.99 km, moving 2642 s vs 44:02, HR 150.6/166 vs 151.0/166, cadence 168.4 vs 168.0
+   spm, elevation 21 m vs +21 m, and all 12 laps the same distances and paces (lap 3: 5:24, HR 153.6 vs
+   154.0, cadence 173.0 vs 172.9). The sub-bpm and 0.4 spm gaps are Strava averaging from higher-precision
+   samples than the integer streams in the FIT file. No fixture added: the file is 189 KB and the laps are
+   already pinned by OCT7_INTERVALS in `tests/fixtures.py`.
 3. **Settle sleep stages** against Garmin Connect (`FIT_AND_WELLNESS_NOTES.md` section 4). Update `stage_minutes` and
    its test, or remove stage output if it cannot be made reliable.
 4. **DONE 2026-11-17: tooling.** git initialized (`nugrahawidiw/runcoach`), `ruff` configured in
@@ -31,9 +36,18 @@ Order matters: P0 items verify what is already built; build new features on veri
    plus both missing-input paths. Missing sleep score or HRV status gives CANNOT DECIDE, naming the input.
    Open: the HR-172 rule is only a watch item (it needs in-session HR, which this command does not see), and
    `--legs-flat` is a manual flag because nothing in the data says how the legs feel.
-2. **Session-structure detection** for intervals and strides from laps/streams (work vs recovery blocks, rep pace,
-   rep HR, rep cadence, fade between reps, first-minute overshoot). Acceptance: reproduces the Oct 7 intervals
-   numbers (reps 5:23 / 5:27 / 5:27; cadence 172.9 / 170.8 / 170.0) and the Oct 9 strides table (5 of 6 in band).
+2. **MOSTLY DONE 2026-11-17: session-structure detection.** `analysis/session.py`; `analyze`/`fit-analyze`
+   with `--kind intervals|strides` now print the rep table, and decoupling is suppressed for those kinds
+   (it is meaningless there, COACHING_CONTEXT 1.1). Reps are found by sorting lap paces and splitting at the
+   single largest gap -- parameter-free, and far steadier than a threshold: the gap is 75 s/km on Oct 7 and
+   159 s/km on Oct 9, while a percentage cut came within a second of misclassifying a rep. `min_gap_pct`
+   (15% of median pace) stops it inventing structure on a steady run: the Oct 11 long run's largest gap is
+   8%. Consecutive fast laps merge, so a 6:00 block spanning a 1 km auto-split and its remainder is one rep.
+   The stride cadence band is applied only to strides.
+   **Acceptance met**: reps 5:23 / 5:27 / 5:27, cadence 172.9 / 170.8 / 170.0, and 5 of 6 strides in band,
+   all reproduced in `tests/test_session.py` from real Strava laps (`OCT7_INTERVALS`, `OCT9_STRIDES`).
+   **Not done: first-minute overshoot.** It needs the HR and pace streams inside each rep; lap averages
+   cannot answer it, and the rendered output says so. 16 tests.
 3. **DONE 2026-11-17: HR zone time-in-zone.** `metrics/zones.py` (`zone_for`, `time_in_zone`,
    `easy_guide_split`); `build_report` adds `time_in_zone` and `easy_guide` when a `heartrate` stream is
    present, and `render_markdown` prints both. Verified on OCT11_LONG: Z1 35:31, Z2 27:38, Z3 6:37, and

@@ -60,6 +60,15 @@ Build a 'deep dive' for one run from Strava API data (activity + laps + streams)
 - `build_report(activity: dict, laps: list[dict], streams: dict | None, profile: Profile, kind: str='easy') -> dict`
 - `render_markdown(rep: dict) -> str`
 
+### `runcoach/analysis/session.py`
+
+Work/recovery structure for intervals and strides, from laps (roadmap P1.2).
+
+- `_pace(lap: dict) -> float | None` *(private)*
+- `_merge(laps: list[dict]) -> dict` *(private)* Combine consecutive laps into one block, time-weighting heart rate and cadence.
+- `detect_structure(laps: list[dict], profile: Profile | None=None, min_gap_pct: float=DEFAULT_MIN_GAP_PCT, kind: str | None=None) -> dict` Split laps into work reps and recoveries. `structured` is False when there is no clear split.
+- `render_markdown(structure: dict) -> str`
+
 ### `runcoach/analysis/weekly.py`
 
 Weekly training summary: distance, time, runs and the CTL/ATL/TSB line at each week's end.
