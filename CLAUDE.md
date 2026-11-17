@@ -51,6 +51,7 @@ runcoach/
   analysis/dedupe.py      find_duplicate_groups / resolve: one run cached from Strava and a FIT import
                           (load, weekly and plan go through cli._cached_activities, so it counts once)
 tests/                    pytest; fixtures.py has REAL laps from the coaching sessions; fitwriter.py writes FIT files
+  data/                   sanitized recorded Strava REST responses (P0.1); see test_recorded_strava.py
 docs/                     ARCHITECTURE, COACHING_CONTEXT, FIT_AND_WELLNESS_NOTES, ROADMAP, API_REFERENCE (generated)
 ```
 Data flow: Strava API or FIT file -> (activity dict, laps list, streams dict) in Strava REST shape ->
@@ -131,7 +132,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
 
 ## Definition of done
 No step here is satisfied by inspection. Run the thing.
-1. `python -m pytest` actually run, and the real count reported (154 passed today). Never write "tests pass"
+1. `python -m pytest` actually run, and the real count reported (162 passed today). Never write "tests pass"
    without the output in front of you. If you did not run them, say so.
 2. New behaviour has a test. A changed formula shows the pinned numbers before and after.
 3. Docs updated: `python scripts/gen_api_docs.py` after signature changes; edit `docs/*.md` if behaviour or

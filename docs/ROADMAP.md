@@ -12,8 +12,13 @@ Order matters: P0 items verify what is already built; build new features on veri
      decoupling is -1.46% live vs -1.33% in the hand analysis. Both are fine; neither is "wrong".
    - Strava reports **read** limits separately (100 per 15 min, 1,000 per day on this app); the client now tracks them.
    - `load` over a short history starts from zero and understates CTL; it now prints a NOTE (seed with `--ctl0/--atl0`).
-   Still open: add a **sanitized recorded-response fixture** from `data/cache/` (remove names, locations, ids) so the
-   REST shapes are pinned by a test.
+   **DONE 2026-11-17: recorded-response fixture.** `tests/data/strava_long_run.json` holds the real synced
+   activity, laps and full-resolution streams for the Oct 11 long run, sanitized by whitelist: ids, athlete,
+   title, description, GPS points, map data, segment and place names, gear, images, tokens and upload ids
+   are gone; the numbers are untouched. `tests/test_recorded_strava.py` pins the REST field names (so the
+   `avg_hr` vs `average_heartrate` trap in section 6 below cannot regress), the stream shape and single
+   resolution, the tail-lap rule dropping the 25 m lap, and the golden numbers. One test fails if a future
+   refresh of the fixture reintroduces anything identifying.
 2. **DONE 2026-11-17: FIT run reader validated on a real watch file.** `24633064698_ACTIVITY.fit`, the
    Oct 7 intervals run, read with `fit-analyze` and compared against the same run from Strava:
    distance 6993.3 m vs 6.99 km, moving 2642 s vs 44:02, HR 150.6/166 vs 151.0/166, cadence 168.4 vs 168.0

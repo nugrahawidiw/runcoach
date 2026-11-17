@@ -62,7 +62,8 @@ behind thresholds and wording. Personal training data: do not publish the reposi
 | Oct 11 long run decoupling raw / grade-adjusted | 6.92% / -1.33% | `test_metrics`, `test_report` |
 | Oct 11 long run lap 10: pace 6:37, GAP 6:14 | `gap_pace(397, 1.1022)` | `test_metrics` |
 | Efficiency (10030.5 m, 4185 s, 140.655 bpm) | 17.04 (live Strava run: 17.03) | `test_metrics` |
-| Live Strava, Oct 11 long run, before the tail-lap rule | raw 7.01%, grade-adjusted -1.46% (tail lap + stream grade) | owner's run, 2026-10-12 |
+| Live Strava, Oct 11 long run, before the tail-lap rule | raw 7.01%, grade-adjusted -1.46% (tail lap + stream grade) | owner's run, 2026-10-12; reproduced exactly from the recorded response on 2026-11-17 |
+| Oct 11 long run **with** the tail-lap rule, from the recorded response | raw 6.91%, grade-adjusted -1.54%, efficiency 17.03 | `test_recorded_strava`. The rule shifts raw 7.01 -> 6.91 and grade-adjusted -1.46 -> -1.54; only the raw effect had been recorded before |
 | VDOT of 26:17 for 5 km / 2:08:21 for a half | 36.1 / 33.7 | `test_metrics` |
 | CTL step from (17.94, 18.55) with load 19 | (17.96, 18.61) | `test_metrics` |
 | Rest-day step from (18.20, 19.78) | (17.77, 17.15), TSB +0.62 | `test_metrics` |
