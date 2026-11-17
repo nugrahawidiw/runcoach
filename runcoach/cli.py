@@ -114,20 +114,53 @@ def _duplicate_note(dropped) -> str:
             "Run `runcoach dedupe` for detail.\n")
 
 
-def _daily_loads(cache, profile, source: str) -> dict[date, float]:
-    """Daily training load from the kept activities. Shared by `load` and `weekly` so the two always agree."""
+def _daily_loads(cache, profile, source: str):
+    """(daily load, fell-back ids, no-load ids) from the kept activities.
+
+    Shared by `load`, `weekly` and `dashboard` so they always agree. The two lists are what the caller has
+    to decide about: Relative Effort and TRIMP are different scales, and summing them into one CTL series
+    gives a number that looks fine and means nothing.
+    """
     daily: dict[date, float] = defaultdict(float)
+    fell_back: list[str] = []
+    no_load: list[str] = []
     kept, _ = _cached_activities(cache)
     for aid, act in kept:
         day = date.fromisoformat(act["start_date_local"][:10])
         if source == "suffer" and act.get("suffer_score") is not None:
             daily[day] += float(act["suffer_score"])
+            continue
+        st = cache.get("streams", aid) or {}
+        hr = (st.get("heartrate") or {}).get("data")
+        tm = (st.get("time") or {}).get("data")
+        if hr and tm:
+            daily[day] += banister_trimp(hr, tm, profile.hr_rest, profile.hr_max, profile.sex)
+            if source == "suffer":
+                fell_back.append(str(aid))
         else:
-            st = cache.get("streams", aid) or {}
-            hr = (st.get("heartrate") or {}).get("data")
-            tm = (st.get("time") or {}).get("data")
-            if hr and tm:
-                daily[day] += banister_trimp(hr, tm, profile.hr_rest, profile.hr_max, profile.sex)
+            no_load.append(str(aid))
+    return daily, fell_back, no_load
+
+
+def _daily_loads_checked(cache, profile, args) -> dict[date, float]:
+    """`_daily_loads`, refusing to mix scales unless the owner asked for it.
+
+    A run with no load data at all contributes nothing, which understates CTL rather than corrupting it, so
+    that is a NOTE and not a refusal.
+    """
+    daily, fell_back, no_load = _daily_loads(cache, profile, args.source)
+    if no_load:
+        print(f"NOTE: {len(no_load)} cached run(s) have neither a Relative Effort nor heart-rate streams, "
+              f"so they count as zero and CTL is understated: {', '.join(no_load)}\n")
+    if fell_back and not getattr(args, "allow_mixed_load", False):
+        sys.exit(f"{len(fell_back)} cached run(s) have no suffer_score, so --source suffer would fall back "
+                 f"to TRIMP for them: {', '.join(fell_back)}\n"
+                 "Relative Effort and TRIMP are different scales; summing both into one CTL series gives a "
+                 "misleading number. Use --source trimp for a consistent series, re-sync those runs, or "
+                 "pass --allow-mixed-load to accept the mix.")
+    if fell_back:
+        print(f"NOTE: mixing scales on {len(fell_back)} run(s) (TRIMP where suffer_score is missing): "
+              f"{', '.join(fell_back)}\n")
     return daily
 
 
@@ -154,7 +187,7 @@ def cmd_weekly(args):
         print(_duplicate_note(dropped))
     activities = [a for _, a in kept]
     plan = plan_data.load_plan(args.plan) if args.plan else None
-    summaries = weekly_summary.summarize_weeks(activities, _daily_loads(cache, profile, args.source),
+    summaries = weekly_summary.summarize_weeks(activities, _daily_loads_checked(cache, profile, args),
                                                weeks=args.weeks, ctl0=args.ctl0, atl0=args.atl0, plan=plan)
     if not summaries:
         sys.exit("No cached runs. Run `runcoach sync` first.")
@@ -166,7 +199,7 @@ def cmd_weekly(args):
 
 def cmd_load(args):
     cache, profile = _cache(), load_profile()
-    daily = _daily_loads(cache, profile, args.source)
+    daily = _daily_loads_checked(cache, profile, args)
     _, dropped = _cached_activities(cache)
     if dropped:
         print(_duplicate_note(dropped))
@@ -225,7 +258,7 @@ def cmd_dashboard(args):
         print(_duplicate_note(dropped))
     if not kept:
         sys.exit("No cached runs. Run `runcoach sync` first.")
-    daily = _daily_loads(cache, profile, args.source)
+    daily = _daily_loads_checked(cache, profile, args)
     weeks = weekly_summary.summarize_weeks([a for _, a in kept], daily, weeks=args.weeks,
                                            ctl0=args.ctl0, atl0=args.atl0)
     points = list(load_series(daily, min(daily), max(daily), args.ctl0, args.atl0)) if daily else []
@@ -341,6 +374,8 @@ def main(argv=None) -> int:
     l.add_argument("--source", choices=["suffer", "trimp"], default="suffer")
     l.add_argument("--ctl0", type=float, default=0.0)
     l.add_argument("--atl0", type=float, default=0.0)
+    l.add_argument("--allow-mixed-load", action="store_true",
+                   help="accept a CTL series that mixes Relative Effort and TRIMP")
     l.set_defaults(fn=cmd_load)
 
     fa = sub.add_parser("fit-analyze", help="deep dive on a Garmin activity .fit file")
@@ -374,6 +409,8 @@ def main(argv=None) -> int:
     wk.add_argument("--source", choices=["suffer", "trimp"], default="suffer")
     wk.add_argument("--ctl0", type=float, default=0.0)
     wk.add_argument("--atl0", type=float, default=0.0)
+    wk.add_argument("--allow-mixed-load", action="store_true",
+                   help="accept a CTL series that mixes Relative Effort and TRIMP")
     wk.add_argument("--plan", help="plan.toml; adds planned runs and km per week")
     wk.add_argument("--json", action="store_true")
     wk.set_defaults(fn=cmd_weekly)
@@ -410,6 +447,8 @@ def main(argv=None) -> int:
                     help="kind of the latest run, for its chart")
     db.add_argument("--ctl0", type=float, default=0.0)
     db.add_argument("--atl0", type=float, default=0.0)
+    db.add_argument("--allow-mixed-load", action="store_true",
+                   help="accept a CTL series that mixes Relative Effort and TRIMP")
     db.set_defaults(fn=cmd_dashboard)
 
     v = sub.add_parser("vdot", help="VDOT and equivalent times")

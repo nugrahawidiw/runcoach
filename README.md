@@ -36,7 +36,7 @@ coaching session, but runs on your own machine.
    ```
    runcoach sync --days 14
    runcoach analyze latest --kind easy      # easy | long | strides | intervals
-   runcoach load --days 42 --source suffer  # or --source trimp
+   runcoach load --days 42 --source suffer  # or --source trimp; refuses to mix the two scales
    runcoach vdot 26:17 5000
    ```
 

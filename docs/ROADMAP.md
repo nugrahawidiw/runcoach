@@ -158,8 +158,11 @@ Everything the roadmap listed is either done or explicitly deferred above. New w
   Live Strava calls were verified on 2026-10-12 and the responses are pinned as a fixture (P0.1).
 - `load` starts the series `--days` before the last activity and seeds it with `--ctl0/--atl0`; without long history
   CTL is understated. Use a long `sync` (in rate-limit-sized chunks) or seed from a known value.
-- `load --source suffer` silently falls back to TRIMP for activities without `suffer_score`; mixing scales gives
-  misleading CTL. Consider failing loudly or marking mixed series.
+- **FIXED 2026-11-17:** `load --source suffer` used to fall back to TRIMP for activities without
+  `suffer_score`, summing two different scales into one CTL series. `load`, `weekly` and `dashboard` now
+  refuse, naming the activities, and `--allow-mixed-load` accepts the mix deliberately. A run with neither
+  a Relative Effort nor heart-rate streams counts as zero, which understates CTL rather than corrupting it,
+  so that is reported as a NOTE instead of a refusal.
 - `analyze --kind strides|intervals` now detects reps (P1.2) and suppresses decoupling, which is meaningless there.
 - Wellness `stress_export_*` window semantics are loose; `sleep_start/end` use the watch's offset.
 - `.env` parser is minimal (no inline comments or multi-line values).

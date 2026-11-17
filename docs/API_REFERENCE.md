@@ -113,7 +113,8 @@ Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | w
 - `cmd_analyze(args)`
 - `_cached_activities(cache)` *(private)* (kept, dropped) cached activities, with Strava/Garmin duplicates resolved (roadmap P1.5).
 - `_duplicate_note(dropped) -> str` *(private)*
-- `_daily_loads(cache, profile, source: str) -> dict[date, float]` *(private)* Daily training load from the kept activities. Shared by `load` and `weekly` so the two always agree.
+- `_daily_loads(cache, profile, source: str)` *(private)* (daily load, fell-back ids, no-load ids) from the kept activities.
+- `_daily_loads_checked(cache, profile, args) -> dict[date, float]` *(private)* `_daily_loads`, refusing to mix scales unless the owner asked for it.
 - `cmd_plan(args)`
 - `cmd_weekly(args)`
 - `cmd_load(args)`

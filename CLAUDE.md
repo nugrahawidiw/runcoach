@@ -66,6 +66,8 @@ Data flow: Strava API or FIT file -> (activity dict, laps list, streams dict) in
   Load from files/API; tests may use `tests/fixtures.py`.
 - **Units, continued:** sleep `duration_min` is deep + light + REM, as Garmin Connect reports it; the whole
   sleep window is `time_in_bed_min`. The two differ by the awake minutes.
+- **Do not mix load scales.** Relative Effort (`suffer_score`) and TRIMP are different units. `load`,
+  `weekly` and `dashboard` refuse a CTL series that would mix them; `--allow-mixed-load` is the opt-in.
 - **Do not change a formula without its test.** `tests/test_metrics.py` pins values from real sessions
   (decoupling 4.02% / 6.92% / -1.33%, VDOT 36.1 / 33.7, CTL steps, TRIMP 69.7). If a change moves them, say so.
 - **Tests stay offline.** No real network calls, no real tokens. Mock the session (see `tests/test_client.py`).
@@ -134,7 +136,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
 
 ## Definition of done
 No step here is satisfied by inspection. Run the thing.
-1. `python -m pytest` actually run, and the real count reported (199 passed today). Never write "tests pass"
+1. `python -m pytest` actually run, and the real count reported (204 passed today). Never write "tests pass"
    without the output in front of you. If you did not run them, say so.
 2. New behaviour has a test. A changed formula shows the pinned numbers before and after.
 3. Docs updated: `python scripts/gen_api_docs.py` after signature changes; edit `docs/*.md` if behaviour or

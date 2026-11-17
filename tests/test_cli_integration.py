@@ -155,3 +155,58 @@ def test_a_path_that_is_not_fit_zip_or_folder_says_so(data_dir, tmp_path):
 def test_a_missing_path_is_reported_not_swallowed(data_dir, tmp_path):
     with pytest.raises((SystemExit, ValueError, FileNotFoundError)):
         main(["fit-analyze", str(tmp_path / "does-not-exist")])
+
+
+# ---- mixed load scales must not pass silently -------------------------------------------------
+def mixed_cache(data_dir):
+    """One run with a Relative Effort and one without, which is the case that used to mix scales."""
+    cache = Cache(data_dir / "cache")
+    with_suffer = activity_for(OCT8_EASY, "2026-10-08", "Easy", suffer=22) | {"id": 1}
+    without = activity_for(OCT11_LONG, "2026-10-11", "Long") | {"id": 2}
+    cache.put("activity", 1, with_suffer)
+    cache.put("activity", 2, without)
+    for aid, rows in ((1, OCT8_EASY), (2, OCT11_LONG)):
+        cache.put("laps", aid, rest_laps(rows))
+        cache.put("streams", aid, streams_for(rows) | {"time": {"data": list(range(sum(r[0] for r in rows)))}})
+    return cache
+
+
+def test_load_refuses_to_mix_relative_effort_and_trimp(data_dir):
+    """Summing two different scales into one CTL series gives a number that looks fine and means nothing."""
+    mixed_cache(data_dir)
+    with pytest.raises(SystemExit) as exc:
+        main(["load", "--days", "7"])
+    message = str(exc.value)
+    assert "no suffer_score" in message and "different scales" in message
+    assert "2" in message                                    # names the offending activity
+
+
+def test_the_mix_can_be_accepted_deliberately(data_dir, capsys):
+    mixed_cache(data_dir)
+    assert main(["load", "--days", "7", "--allow-mixed-load"]) == 0
+    out = capsys.readouterr().out
+    assert "mixing scales" in out and "CTL" in out
+
+
+def test_trimp_source_is_consistent_so_it_does_not_refuse(data_dir, capsys):
+    mixed_cache(data_dir)
+    assert main(["load", "--days", "7", "--source", "trimp"]) == 0
+    assert "different scales" not in capsys.readouterr().out
+
+
+def test_weekly_and_dashboard_refuse_the_same_way(data_dir, tmp_path):
+    mixed_cache(data_dir)
+    for argv in (["weekly", "--weeks", "2"], ["dashboard", "--out", str(tmp_path / "d.html")]):
+        with pytest.raises(SystemExit) as exc:
+            main(argv)
+        assert "different scales" in str(exc.value), argv
+
+
+def test_a_run_with_no_load_data_at_all_is_reported_not_silently_zero(data_dir, capsys):
+    """It counts as zero, which understates CTL; that is a NOTE rather than a refusal."""
+    cache = Cache(data_dir / "cache")
+    cache.put("activity", 1, activity_for(OCT8_EASY, "2026-10-08", "Easy", suffer=22) | {"id": 1})
+    cache.put("activity", 9, activity_for(OCT11_LONG, "2026-10-11", "Long") | {"id": 9})
+    assert main(["load", "--days", "7"]) == 0
+    out = capsys.readouterr().out
+    assert "neither a Relative Effort nor heart-rate streams" in out and "9" in out
