@@ -11,7 +11,7 @@ File names are `<12-digit id>_<TYPE>.fit`. The description below comes from 81 n
 |---|---|---|
 | `WELLNESS` | monitoring HR samples, stress, respiration, resting HR, body battery events | HR in sleep window, stress, respiration, RHR |
 | `SLEEP_DATA` | sleep assessment (score + parts), sleep stages, sleep window | score, duration, stages |
-| `HRV_STATUS` | `hrv_status_summary` + 5-minute `hrv_value` samples | HRV, baseline, status |
+| `HRV_STATUS` | `hrv_status_summary` | HRV, baseline, status |
 | `SLEEP_DISRUPTIONS` | unknown messages (470/471) | not used |
 | `METRICS` | unknown messages (241/339) | not used |
 | `NAP` | nap windows | skipped (nights need >= 120 min) |
@@ -25,7 +25,7 @@ A daily zip usually contains one night. A folder of zips is handled one export a
 | `sleep_assessment` | `overall_sleep_score`, `sleep_quality_score`, `sleep_duration_score`, `deep_sleep_score`, `light_sleep_score`, `awake_time_score`, `awakenings_count_score`, `combined_awake_score`, `average_stress_during_sleep` | one per night |
 | `sleep_level` | `timestamp`, `sleep_level` (`light`, `deep`, `rem`, `awake`) | timestamp semantics are an assumption (section 4) |
 | `hrv_status_summary` | `weekly_average`, `last_night_average`, `last_night_5_min_high`, `baseline_low_upper`, `baseline_balanced_lower`, `baseline_balanced_upper`, `status` (`balanced`, ...) | status follows the 7-day average against the balanced range, so one low night can still read `balanced` |
-| `hrv_value` | `timestamp`, `value` | 5-minute values during sleep; read but not summarized yet |
+| `hrv_value` | `timestamp`, `value` | 5-minute values during sleep; not read (the summary message is enough) |
 | `monitoring` | `heart_rate`, `timestamp` or `timestamp_16` | most rows carry **only** the low 16 bits; see section 3 |
 | `monitoring_info` | `timestamp`, `local_timestamp` | local offset = local - UTC |
 | `monitoring_hr_data` | `resting_heart_rate`, `current_day_resting_heart_rate` | Garmin's own RHR; the last message in the export is used |

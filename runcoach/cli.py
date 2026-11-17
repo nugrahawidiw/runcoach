@@ -152,14 +152,18 @@ def cmd_wellness(args):
     if args.json:
         print(json.dumps([n.to_dict() for n in nights], indent=2))
     else:
-        print("| Wake date | Sleep | Dur | HRV last / 7d | HRV baseline | Status | Low HR | Garmin RHR | Stress (sleep) | Battery |")
+        print("| Wake date | Sleep | Dur | HRV last / 7d | HRV baseline low / balanced "
+              "| Status | Low HR | Garmin RHR | Stress (sleep) | Battery |")
         print("|---|---|---|---|---|---|---|---|---|---|")
         for n in nights:
             h, m = divmod(int(round(n.duration_min)), 60)
             low, bal_lo, bal_hi = n.hrv_baseline[0], n.hrv_baseline[1], n.hrv_baseline[2]
-            print(f"| {n.wake_date} | {_fmt(n.score)} | {h}h{m:02d} | {_fmt(n.hrv_last_night, '.0f')} / {_fmt(n.hrv_weekly, '.0f')} "
-                  f"| {_fmt(bal_lo, '.0f')}-{_fmt(bal_hi, '.0f')} | {_fmt(n.hrv_status)} | {_fmt(n.sleep_low_hr)} "
-                  f"| {_fmt(n.garmin_rhr)} | {_fmt(n.stress_sleep_avg, '.0f')} | {_fmt(n.body_battery_delta, '+d')} |")
+            print(f"| {n.wake_date} | {_fmt(n.score)} | {h}h{m:02d} "
+                  f"| {_fmt(n.hrv_last_night, '.0f')} / {_fmt(n.hrv_weekly, '.0f')} "
+                  f"| {_fmt(low, '.0f')} / {_fmt(bal_lo, '.0f')}-{_fmt(bal_hi, '.0f')} "
+                  f"| {_fmt(n.hrv_status)} | {_fmt(n.sleep_low_hr)} "
+                  f"| {_fmt(n.garmin_rhr)} | {_fmt(n.stress_sleep_avg, '.0f')} "
+                  f"| {_fmt(n.body_battery_delta, '+d')} |")
     if args.csv:
         import csv
         rows = [n.to_dict() for n in nights]

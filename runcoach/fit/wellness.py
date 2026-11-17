@@ -120,8 +120,6 @@ def summarize_messages(messages: list[Message]) -> list[Night]:
     hrv_summaries = sorted(
         [(fit_time(m.fields.get("timestamp")), m.fields) for m in messages if m.name == "hrv_status_summary"],
         key=lambda x: x[0] or FIT_EPOCH)
-    hrv_values = [(fit_time(m.fields.get("timestamp")), m.fields.get("value")) for m in messages
-                  if m.name == "hrv_value" and m.fields.get("value") is not None]
     rhr_msgs = sorted(
         [(fit_time(m.fields.get("timestamp")), m.fields) for m in messages if m.name == "monitoring_hr_data"],
         key=lambda x: x[0] or FIT_EPOCH)

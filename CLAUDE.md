@@ -76,8 +76,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
   "while I was in there" generalisations. The metrics are plain functions; keep them that way.
 - **One roadmap item at a time.** Do not widen the task. Note anything else you spot and move on.
 - **Mention unrelated dead code; do not delete it.** Remove only the imports and variables that *your* change
-  orphaned. Pre-existing dead code is the owner's call: two known cases are `runcoach/cli.py:159` (`low`) and
-  `runcoach/fit/wellness.py:123` (`hrv_values`), both flagged by ruff and both left in place deliberately.
+  orphaned. Pre-existing dead code is the owner's call, not yours: report it and move on.
 - **No error handling for impossible scenarios.** And if you wrote 200 lines where 50 would do, rewrite it.
 - **Do not reformat or reorder code you did not change.** The owner reviews diffs by reading them; a diff
   with 200 cosmetic lines cannot be reviewed.
@@ -115,7 +114,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
 
 ## Definition of done
 No step here is satisfied by inspection. Run the thing.
-1. `python -m pytest` actually run, and the real count reported (34 passed today). Never write "tests pass"
+1. `python -m pytest` actually run, and the real count reported (35 passed today). Never write "tests pass"
    without the output in front of you. If you did not run them, say so.
 2. New behaviour has a test. A changed formula shows the pinned numbers before and after.
 3. Docs updated: `python scripts/gen_api_docs.py` after signature changes; edit `docs/*.md` if behaviour or

@@ -79,3 +79,14 @@ def test_stage_minutes_assumption_documented_in_behaviour():
     lv = [(START + dt.timedelta(minutes=10), "light"), (START + dt.timedelta(minutes=40), "deep")]
     out = stage_minutes(lv, START, START + dt.timedelta(minutes=50))
     assert out == {"light": 10.0, "deep": 30.0, "unassigned": 10.0}
+
+
+def test_wellness_table_shows_the_hrv_low_baseline(monkeypatch, capsys):
+    """The markdown table reports baseline_low_upper, not only the balanced range."""
+    from runcoach import cli
+
+    monkeypatch.setattr(cli, "iter_groups", lambda path: [("SLEEP.fit", night_messages())])
+    assert cli.main(["wellness", "unused-path"]) == 0
+    out = capsys.readouterr().out
+    assert "HRV baseline low / balanced" in out
+    assert "25 / 27-34" in out
