@@ -24,9 +24,13 @@ Order matters: P0 items verify what is already built; build new features on veri
    ubuntu + windows for Python 3.11 and 3.13. `ruff check` and `pytest` both pass.
 
 ## P1: features (each needs tests)
-1. **Readiness command** `runcoach readiness`: latest wellness night + planned session -> recommendation using the
-   rules in `COACHING_CONTEXT.md` (clearly separating confirmed rules from proposals). Acceptance: deterministic
-   output for fixed inputs; every rule has a test; prints which rule fired.
+1. **DONE 2026-11-17: readiness command.** `analysis/readiness.py` + `runcoach readiness PATH --kind
+   {intervals,long,strides,gate} [--legs-flat] [--json]`. All four rules from COACHING_CONTEXT section 3 are
+   coded and each output line carries the rule id and its status, so a proposal is never shown as agreed.
+   Deterministic: no clock, no randomness, no network. 17 tests in `tests/test_readiness.py`, one per rule
+   plus both missing-input paths. Missing sleep score or HRV status gives CANNOT DECIDE, naming the input.
+   Open: the HR-172 rule is only a watch item (it needs in-session HR, which this command does not see), and
+   `--legs-flat` is a manual flag because nothing in the data says how the legs feel.
 2. **Session-structure detection** for intervals and strides from laps/streams (work vs recovery blocks, rep pace,
    rep HR, rep cadence, fade between reps, first-minute overshoot). Acceptance: reproduces the Oct 7 intervals
    numbers (reps 5:23 / 5:27 / 5:27; cadence 172.9 / 170.8 / 170.0) and the Oct 9 strides table (5 of 6 in band).

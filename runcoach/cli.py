@@ -9,6 +9,7 @@ import sys
 from collections import defaultdict
 from datetime import date, timedelta
 
+from .analysis import readiness as readiness_rules
 from .analysis.run_report import build_report, render_markdown
 from .config import data_dir, load_env, load_profile
 from .fit.activity import activity_from_messages, cache_id
@@ -142,6 +143,20 @@ def _fmt(value, spec="", dash="-"):
     return dash if value is None else format(value, spec)
 
 
+def cmd_readiness(args):
+    nights = []
+    for _label, msgs in iter_groups(args.path):
+        nights.extend(summarize_messages(msgs))
+    if not nights:
+        sys.exit("No full night of sleep data found in that path.")
+    night = max(nights, key=lambda n: n.wake_date)
+    result = readiness_rules.evaluate(night, args.kind, legs_flat=args.legs_flat, profile=load_profile())
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        print(readiness_rules.render_markdown(result))
+
+
 def cmd_wellness(args):
     nights = []
     for _label, msgs in iter_groups(args.path):
@@ -219,6 +234,15 @@ def main(argv=None) -> int:
     w.add_argument("--json", action="store_true")
     w.add_argument("--csv", help="also write all nights to this CSV file")
     w.set_defaults(fn=cmd_wellness)
+
+    r = sub.add_parser("readiness", help="recommendation for a planned session from the latest wellness night")
+    r.add_argument("path", help="Garmin wellness FIT file, zip or folder (the latest night in it is used)")
+    r.add_argument("--kind", required=True, choices=list(readiness_rules.SESSION_KINDS),
+                   help="the planned session")
+    r.add_argument("--legs-flat", action="store_true",
+                   help="report the legs as flat (the strides rule has no data source for this)")
+    r.add_argument("--json", action="store_true")
+    r.set_defaults(fn=cmd_readiness)
 
     v = sub.add_parser("vdot", help="VDOT and equivalent times")
     v.add_argument("time", help="e.g. 26:17 or 2:08:21")

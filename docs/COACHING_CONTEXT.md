@@ -42,6 +42,10 @@ behind thresholds and wording. Personal training data: do not publish the reposi
   - **Suggested, not objected to (Oct 11 long run):** if the sleep score is < 60 or HRV reads Unbalanced, cut the
     long run to 60 minutes; keep easy/long HR near or below about 145.
   - **Proposed, NOT confirmed (Oct 14 gate session):** run 3 reps instead of 4 under the same sleep/HRV condition.
+  - All four are coded in `analysis/readiness.py` (`runcoach readiness --kind ...`), each tagged with the
+    status above. The thresholds live in that module (`SLEEP_FLOOR = 60`, `INTERVALS_HR_CAP = 172`). The
+    HR-172 rule is reported as an in-session watch item, not a pre-session decision, because last night's
+    data cannot settle it. The strides rule needs `--legs-flat`: there is no data source for how legs feel.
 - Load model: CTL/ATL from Strava Relative Effort (42/7-day exponential), TSB = CTL - ATL.
   Strength sessions add almost nothing to this model and were excluded.
 

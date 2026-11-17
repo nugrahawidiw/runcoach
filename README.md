@@ -91,6 +91,18 @@ Each night shows the sleep score and its parts, duration, HRV (last night, 7-day
 range and status), the lowest heart rate in the sleep window, Garmin's resting HR, stress during sleep,
 body battery change and an estimate of sleep stages.
 
+## Readiness
+
+```
+python -m runcoach readiness "D:\Garmin\2026-10-12.zip" --kind intervals
+python -m runcoach readiness "D:\Garmin" --kind strides --legs-flat
+```
+
+Takes the latest night in the path and the planned session (`intervals`, `long`, `strides`, `gate`) and prints
+the recommendation, the rule it came from, the inputs it used, and **the rule's status**: confirmed, in the
+plan, suggested, or proposed and not confirmed. A proposal is never shown as an agreed rule. If the sleep score
+or HRV status is missing it prints CANNOT DECIDE and names the missing input instead of guessing.
+
 Things to know:
 
 - HRV status follows the 7-day average against Garmin's balanced range, so a single night below the

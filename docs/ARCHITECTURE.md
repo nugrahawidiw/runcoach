@@ -30,6 +30,8 @@ Design rule: **convert every source to Strava's REST shapes first**, then run on
 2. **Converters** (`fit/activity.py`, `fit/wellness.py`): normalize into the shared shapes or `Night` records.
 3. **Metrics** (`metrics/*`): pure functions, no I/O, easiest to test. Prefer adding logic here.
 4. **Analysis** (`analysis/run_report.py`): joins laps + streams + profile into a report dict.
+   `analysis/readiness.py` turns one wellness Night plus a planned session kind into a recommendation,
+   carrying each rule's status (confirmed / in_plan / suggested / proposed_not_confirmed) into the output.
 5. **CLI** (`cli.py`): argument parsing and printing only.
 
 ## 4. Data shapes (the contract between layers)
