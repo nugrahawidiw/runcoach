@@ -30,11 +30,13 @@ def rest_laps(rows):
 
 def streams_for(rows):
     """1 Hz grade and cadence streams that reproduce each lap's average."""
-    grade, cadence = [], []
-    for secs, _dist, g, _hr, cad in rows:
+    grade, cadence, heartrate = [], [], []
+    for secs, _dist, g, hr, cad in rows:
         grade += [g] * secs
         cadence += [cad] * secs
-    return {"grade_smooth": {"data": grade}, "cadence": {"data": cadence}}
+        heartrate += [hr] * secs
+    return {"grade_smooth": {"data": grade}, "cadence": {"data": cadence},
+            "heartrate": {"data": heartrate}}
 
 
 def laps_for_decoupling(rows):

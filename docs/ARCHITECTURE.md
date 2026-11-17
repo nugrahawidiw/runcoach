@@ -17,7 +17,7 @@ Two data sources feed the same analysis:
 Strava API ──► StravaClient ──► Cache (JSON files) ──┐
                                                      ├──► (activity, laps, streams) ──► build_report ──► markdown / JSON
 Garmin run .fit ──► fit.reader ──► fit.activity ─────┘                │
-                                                                      └─► metrics/*  (gap, decoupling, cadence, efficiency)
+                                                                      └─► metrics/*  (gap, decoupling, cadence, efficiency, zones)
 
 cached runs ──► metrics.load (suffer_score or TRIMP) ──► CTL / ATL / TSB table
 
@@ -54,7 +54,9 @@ longer gaps (pauses) stay `None`.
 
 ### Report (`build_report` output)
 Top level: `name, date, kind, distance_km, moving, avg_pace (s/km), overall_gap (s/km), avg_hr, max_hr,
-avg_cadence_spm, elevation_m, gear_id, suffer_score, efficiency, laps, decoupling_raw, decoupling_gap, flags`.
+avg_cadence_spm, elevation_m, gear_id, suffer_score, efficiency, laps, decoupling_raw, decoupling_gap,
+time_in_zone, easy_guide, flags`. `time_in_zone` is `{Z1..Z5: seconds}` and `easy_guide` is
+`{guide, at_or_below_s, above_s}`; both are `None` when the activity has no `heartrate` stream.
 Lap row: `lap, distance_m, moving_s, pace (s/km), gap (s/km), grade_pct, avg_hr, cadence_spm`.
 Decoupling dict: `first_pace, first_hr, second_pace, second_hr, pct`.
 
@@ -105,6 +107,11 @@ Pick one source and keep it; do not mix. `runcoach load` prints a NOTE when unde
 no seed is given, because CTL then starts from zero.
 
 **`metrics/vdot.py`** Daniels/Gilbert VDOT, bisection for equivalent times, Riegel projection (exponent 1.06).
+
+**`metrics/zones.py`** Time in zone from the 1 Hz `heartrate` stream, one second per measured sample, plus the
+easy-HR guide split. Zones come from `Profile.hr_zones`, the **lower** bounds of Z2..Z5. The standing table in
+`COACHING_CONTEXT.md` has gaps (151, 160, 168 bpm belong to no zone); using lower bounds only makes the
+partition total, so each gap bpm joins the zone below it and the seconds sum to the measured samples.
 Approximate by design; used for context, not prescription.
 
 **`fit/reader.py`** Thin wrapper over `fitdecode`. `Message(name, fields, file)`; unknown messages arrive as

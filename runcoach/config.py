@@ -14,6 +14,7 @@ class Profile:
     tempo_band: tuple[float, float] = (336.0, 348.0)     # 5:36-5:48
     stride_cadence: tuple[int, int] = (181, 191)         # steps per minute
     easy_hr_guide: int = 145
+    hr_zones: tuple[int, int, int, int] = (144, 152, 161, 169)   # lower bounds of Z2..Z5; see metrics/zones.py
     lthr: int = 169
     hr_rest: int = 55
     hr_max: int = 178

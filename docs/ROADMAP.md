@@ -18,8 +18,10 @@ Order matters: P0 items verify what is already built; build new features on veri
    cadence, lap paces). Add a small sanitized fixture or a synthetic file that reproduces any difference found.
 3. **Settle sleep stages** against Garmin Connect (`FIT_AND_WELLNESS_NOTES.md` section 4). Update `stage_minutes` and
    its test, or remove stage output if it cannot be made reliable.
-4. **Tooling:** add `ruff` (lint + format) and a pre-commit hook; initialize git; add a CI workflow that runs pytest.
-   Acceptance: `ruff check` and `pytest` pass.
+4. **PARTLY DONE 2026-11-17: tooling.** git initialized (`nugrahawidiw/runcoach`), `ruff` configured in
+   `pyproject.toml` (line-length 135, `E,F,I,UP`; `E702`/`E741` ignored as house style) and a pre-commit hook
+   runs ruff on staged files plus the full suite. `ruff check` and `pytest` both pass.
+   Still open: a **CI workflow** that runs pytest on push.
 
 ## P1: features (each needs tests)
 1. **Readiness command** `runcoach readiness`: latest wellness night + planned session -> recommendation using the
@@ -28,7 +30,12 @@ Order matters: P0 items verify what is already built; build new features on veri
 2. **Session-structure detection** for intervals and strides from laps/streams (work vs recovery blocks, rep pace,
    rep HR, rep cadence, fade between reps, first-minute overshoot). Acceptance: reproduces the Oct 7 intervals
    numbers (reps 5:23 / 5:27 / 5:27; cadence 172.9 / 170.8 / 170.0) and the Oct 9 strides table (5 of 6 in band).
-3. **HR zone time-in-zone** using the standing zones (Z1 < 144 ... Z5 169+) and the HR guide check by minutes.
+3. **DONE 2026-11-17: HR zone time-in-zone.** `metrics/zones.py` (`zone_for`, `time_in_zone`,
+   `easy_guide_split`); `build_report` adds `time_in_zone` and `easy_guide` when a `heartrate` stream is
+   present, and `render_markdown` prints both. Verified on OCT11_LONG: Z1 35:31, Z2 27:38, Z3 6:37, and
+   35:31 of 1:09:46 (51%) at or below the 145 guide. The standing zones have gaps (151, 160, 168 bpm), so
+   zones are defined by lower bounds and each gap bpm joins the zone below; see `metrics/zones.py`.
+   Open question for the owner: if a gap bpm should instead count to the zone *above*, change `hr_zones`.
 4. **Charts:** pace and cadence over time with segment bands (PNG or HTML), replacing the hand-built charts.
    Acceptance: same inputs as `report`; optional dependency (`matplotlib` or inline SVG), clearly marked.
 5. **Dedupe Strava vs Garmin runs** when both are cached (match on start time +/- 2 min and distance).

@@ -8,6 +8,7 @@ from ..metrics.cadence import mean_spm
 from ..metrics.decoupling import decoupling, efficiency
 from ..metrics.gap import gap_factor
 from ..metrics.pace import fmt_pace, fmt_time
+from ..metrics.zones import ZONE_NAMES, easy_guide_split, time_in_zone
 
 
 def _stream(streams: dict | None, key: str):
@@ -58,6 +59,7 @@ def build_report(activity: dict, laps: list[dict], streams: dict | None,
                  profile: Profile, kind: str = "easy") -> dict:
     grade_stream = _stream(streams, "grade_smooth")
     cad_stream = _stream(streams, "cadence")
+    hr_stream = _stream(streams, "heartrate")
     raw_laps = laps or laps_from_splits(activity)
 
     rows = []
@@ -113,8 +115,14 @@ def build_report(activity: dict, laps: list[dict], streams: dict | None,
         "laps": rows,
         "decoupling_raw": None,
         "decoupling_gap": None,
+        "time_in_zone": time_in_zone(hr_stream, profile.hr_zones) if hr_stream else None,
+        "easy_guide": None,
         "flags": [],
     }
+    if hr_stream:
+        at_or_below, above = easy_guide_split(hr_stream, profile.easy_hr_guide)
+        report["easy_guide"] = {"guide": profile.easy_hr_guide,
+                                "at_or_below_s": at_or_below, "above_s": above}
     d_raw = decoupling(dec_inputs, use_gap=False)
     d_gap = decoupling(dec_inputs, use_gap=True)
     report["decoupling_raw"] = asdict(d_raw) if d_raw else None
@@ -157,6 +165,15 @@ def render_markdown(rep: dict) -> str:
                          f"{fmt_pace(d['second_pace'])} @ {d['second_hr']:.1f})")
     if rep["efficiency"]:
         lines.append(f"- Efficiency (speed per heartbeat x1000): {rep['efficiency']:.2f}")
+    if rep["time_in_zone"]:
+        parts = " ".join(f"{z} {fmt_time(rep['time_in_zone'][z])}" for z in ZONE_NAMES)
+        lines.append(f"- Time in zone: {parts}")
+    if rep["easy_guide"]:
+        g = rep["easy_guide"]
+        measured = g["at_or_below_s"] + g["above_s"]
+        pct = 100.0 * g["at_or_below_s"] / measured if measured else 0.0
+        lines.append(f"- HR at or below the {g['guide']} guide: {fmt_time(g['at_or_below_s'])} "
+                     f"of {fmt_time(measured)} ({pct:.0f}%)")
     for flag in rep["flags"]:
         lines.append(f"- FLAG: {flag}")
     return "\n".join(lines)

@@ -137,6 +137,14 @@ Daniels/Gilbert VDOT and Riegel race-time projection (approximate by design).
 - `time_for_vdot(v: float, dist_m: float) -> float` Equivalent race time (s) at a distance for a VDOT (bisection).
 - `riegel(time_s: float, from_m: float, to_m: float, exponent: float=1.06) -> float`
 
+### `runcoach/metrics/zones.py`
+
+Heart-rate time-in-zone and the easy-HR guide check.
+
+- `zone_for(hr: float, lowers: Sequence[int]) -> str` Zone name for one heart-rate sample, given the four lower bounds of Z2..Z5.
+- `time_in_zone(hr_data: Iterable[float | None], lowers: Sequence[int]) -> dict[str, int]` Seconds per zone from a 1 Hz heart-rate stream. Missing samples are skipped.
+- `easy_guide_split(hr_data: Iterable[float | None], guide: int) -> tuple[int, int]` Seconds at or below the easy-HR guide, and seconds above it. The guide is inclusive.
+
 ### `runcoach/strava/auth.py`
 
 Strava OAuth2: authorize once in a browser, then refresh tokens automatically.

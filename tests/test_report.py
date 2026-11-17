@@ -55,3 +55,29 @@ def test_trailing_tiny_lap_is_ignored_but_short_work_laps_are_kept():
     strides = [dict(tail, distance=90.0, moving_time=20, end_index=last_end + 20) for _ in range(3)]
     rep2 = build_report(act, laps[:1] + strides, None, Profile(), kind="strides")
     assert len(rep2["laps"]) == 4                                  # 90 m laps are real work, not artefacts
+
+
+def test_report_includes_time_in_zone_and_the_easy_guide_split():
+    """Roadmap P1.3: zones and the guide check come from the 1 Hz heartrate stream."""
+    from runcoach.analysis.run_report import build_report, render_markdown
+    from runcoach.config import Profile
+    from tests.fixtures import OCT11_LONG, rest_laps, streams_for
+
+    rep = build_report({"name": "Long", "start_date_local": "2026-10-11T07:00:00Z"},
+                       rest_laps(OCT11_LONG), streams_for(OCT11_LONG), Profile(), kind="long")
+    assert rep["time_in_zone"] == {"Z1": 2131, "Z2": 1658, "Z3": 397, "Z4": 0, "Z5": 0}
+    assert rep["easy_guide"] == {"guide": 145, "at_or_below_s": 2131, "above_s": 2055}
+    md = render_markdown(rep)
+    assert "- Time in zone: Z1 35:31 Z2 27:38 Z3 6:37 Z4 0:00 Z5 0:00" in md
+    assert "- HR at or below the 145 guide: 35:31 of 1:09:46 (51%)" in md
+
+
+def test_report_omits_zones_without_a_heartrate_stream():
+    from runcoach.analysis.run_report import build_report, render_markdown
+    from runcoach.config import Profile
+    from tests.fixtures import OCT11_LONG, rest_laps
+
+    rep = build_report({"name": "Long", "start_date_local": "2026-10-11T07:00:00Z"},
+                       rest_laps(OCT11_LONG), None, Profile(), kind="long")
+    assert rep["time_in_zone"] is None and rep["easy_guide"] is None
+    assert "Time in zone" not in render_markdown(rep)

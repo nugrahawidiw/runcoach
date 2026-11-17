@@ -34,7 +34,7 @@ runcoach/
   config.py               Profile (pace bands, HR guide ...), .env loader, data dir
   strava/                 auth.py (OAuth), client.py (REST), cache.py (JSON files), sync.py, errors.py
   fit/                    reader.py (fitdecode -> Message), wellness.py (nights), activity.py (runs)
-  metrics/                pace, gap, decoupling, cadence, load (TRIMP, CTL), vdot  (pure functions)
+  metrics/                pace, gap, decoupling, cadence, load (TRIMP, CTL), vdot, zones  (pure functions)
   analysis/run_report.py  build_report(activity, laps, streams, profile) -> dict ; render_markdown
 tests/                    pytest; fixtures.py has REAL laps from the coaching sessions; fitwriter.py writes FIT files
 docs/                     ARCHITECTURE, COACHING_CONTEXT, FIT_AND_WELLNESS_NOTES, ROADMAP, API_REFERENCE (generated)
@@ -114,7 +114,7 @@ Scope and output discipline. These are the failure modes that cost the most to u
 
 ## Definition of done
 No step here is satisfied by inspection. Run the thing.
-1. `python -m pytest` actually run, and the real count reported (35 passed today). Never write "tests pass"
+1. `python -m pytest` actually run, and the real count reported (43 passed today). Never write "tests pass"
    without the output in front of you. If you did not run them, say so.
 2. New behaviour has a test. A changed formula shows the pinned numbers before and after.
 3. Docs updated: `python scripts/gen_api_docs.py` after signature changes; edit `docs/*.md` if behaviour or
