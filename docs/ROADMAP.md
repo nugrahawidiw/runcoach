@@ -48,7 +48,17 @@ Order matters: P0 items verify what is already built; build new features on veri
    matplotlib behind the same signature. Output is self-contained (no external fonts, scripts or images).
    13 tests, including XML validity, inverted pace axis, escaping, and that axis labels stay inside the
    canvas -- a screenshot showed "Cadence spm" clipped at the right edge, which no other test caught.
-5. **Dedupe Strava vs Garmin runs** when both are cached (match on start time +/- 2 min and distance).
+5. **DONE 2026-11-17: dedupe Strava vs Garmin.** `analysis/dedupe.py` + `runcoach dedupe [--minutes 2]
+   [--tolerance-m 100] [--prefer strava|garmin] [--json]`. The source is read from the cache key
+   (`fit-...` is a FIT import). More importantly, `load`, `weekly` and `plan` now go through
+   `cli._cached_activities`, so a run cached from both sources is no longer counted twice -- which
+   previously inflated CTL and weekly distance -- and those commands print a NOTE naming what they ignored.
+   Two choices the roadmap left open: the distance tolerance is 100 m or 1% of the longer run, whichever is
+   more generous (Garmin and Strava routinely differ by tens of metres); and Strava wins by default because
+   it carries `suffer_score`, which `load` prefers. **Nothing is deleted from the cache** -- the functions
+   only report and filter -- so a wrong match costs a line of output, not data. Same-source pairs are
+   deliberately never merged: two Strava rows at one time are a cache problem that should stay visible.
+   15 tests.
 6. **MOSTLY DONE 2026-11-17: weekly summary.** `analysis/weekly.py` + `runcoach weekly [--weeks N]
    [--source suffer|trimp] [--ctl0 X --atl0 Y] [--json]`. One row per Monday-to-Sunday week (weeks run
    Mon-Sun per section 3 above): runs, distance, moving time, average pace, longest run, and CTL/ATL/TSB read

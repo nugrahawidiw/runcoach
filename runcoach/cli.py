@@ -10,6 +10,7 @@ from collections import defaultdict
 from datetime import date, timedelta
 
 from .analysis import charts as chart_svg
+from .analysis import dedupe as dedupe_runs
 from .analysis import plan as plan_data
 from .analysis import readiness as readiness_rules
 from .analysis import weekly as weekly_summary
@@ -95,11 +96,28 @@ def cmd_analyze(args):
         _write_chart(report, args.chart)
 
 
+def _cached_activities(cache):
+    """(kept, dropped) cached activities, with Strava/Garmin duplicates resolved (roadmap P1.5).
+
+    Deduping here means `load`, `weekly` and `plan` cannot count one run twice just because it was imported
+    from a FIT file as well as synced. Nothing is removed from the cache itself.
+    """
+    entries = [(aid, cache.get("activity", aid)) for aid in cache.ids("activity")]
+    kept, dropped, _ = dedupe_runs.resolve([(k, a) for k, a in entries if a])
+    return kept, dropped
+
+
+def _duplicate_note(dropped) -> str:
+    keys = ", ".join(k for k, _ in dropped)
+    return (f"NOTE: {len(dropped)} duplicate run(s) ignored so they are not counted twice: {keys}. "
+            "Run `runcoach dedupe` for detail.\n")
+
+
 def _daily_loads(cache, profile, source: str) -> dict[date, float]:
-    """Daily training load from the cache. Shared by `load` and `weekly` so the two always agree."""
+    """Daily training load from the kept activities. Shared by `load` and `weekly` so the two always agree."""
     daily: dict[date, float] = defaultdict(float)
-    for aid in cache.ids("activity"):
-        act = cache.get("activity", aid)
+    kept, _ = _cached_activities(cache)
+    for aid, act in kept:
         day = date.fromisoformat(act["start_date_local"][:10])
         if source == "suffer" and act.get("suffer_score") is not None:
             daily[day] += float(act["suffer_score"])
@@ -120,8 +138,8 @@ def cmd_plan(args):
         print(f"wrote {args.ics} ({len(plan)} sessions)")
         return
     cache = _cache()
-    activities = [a for a in (cache.get("activity", aid) for aid in cache.ids("activity")) if a]
-    comparison = plan_data.compare(plan, activities)
+    kept, _ = _cached_activities(cache)
+    comparison = plan_data.compare(plan, [a for _, a in kept])
     if args.json:
         print(json.dumps(comparison.rows, indent=2))
     else:
@@ -130,7 +148,10 @@ def cmd_plan(args):
 
 def cmd_weekly(args):
     cache, profile = _cache(), load_profile()
-    activities = [a for a in (cache.get("activity", aid) for aid in cache.ids("activity")) if a]
+    kept, dropped = _cached_activities(cache)
+    if dropped:
+        print(_duplicate_note(dropped))
+    activities = [a for _, a in kept]
     plan = plan_data.load_plan(args.plan) if args.plan else None
     summaries = weekly_summary.summarize_weeks(activities, _daily_loads(cache, profile, args.source),
                                                weeks=args.weeks, ctl0=args.ctl0, atl0=args.atl0, plan=plan)
@@ -145,6 +166,9 @@ def cmd_weekly(args):
 def cmd_load(args):
     cache, profile = _cache(), load_profile()
     daily = _daily_loads(cache, profile, args.source)
+    _, dropped = _cached_activities(cache)
+    if dropped:
+        print(_duplicate_note(dropped))
     if not daily:
         sys.exit("No cached runs with load data. Run `runcoach sync` first.")
     end = max(daily)
@@ -191,6 +215,17 @@ def cmd_fit_import(args):
 
 def _fmt(value, spec="", dash="-"):
     return dash if value is None else format(value, spec)
+
+
+def cmd_dedupe(args):
+    cache = _cache()
+    entries = [(aid, cache.get("activity", aid)) for aid in cache.ids("activity")]
+    groups = dedupe_runs.find_duplicate_groups([(k, a) for k, a in entries if a],
+                                               minutes=args.minutes, tol_m=args.tolerance_m)
+    if args.json:
+        print(json.dumps([[{"key": k, "activity": a} for k, a in g] for g in groups], indent=2))
+    else:
+        print(dedupe_runs.render_markdown(groups, prefer=args.prefer))
 
 
 def cmd_trends(args):
@@ -332,6 +367,15 @@ def main(argv=None) -> int:
                     help="consecutive weak nights that raise the alert")
     tr.add_argument("--json", action="store_true")
     tr.set_defaults(fn=cmd_trends)
+
+    dd = sub.add_parser("dedupe", help="find runs cached from both Strava and a Garmin FIT import")
+    dd.add_argument("--minutes", type=float, default=dedupe_runs.DEFAULT_MINUTES,
+                    help="how far apart two start times may be")
+    dd.add_argument("--tolerance-m", type=float, default=dedupe_runs.DEFAULT_TOL_M,
+                    help="absolute distance tolerance; 1%% of the longer run is used when that is larger")
+    dd.add_argument("--prefer", choices=["strava", "garmin"], default="strava")
+    dd.add_argument("--json", action="store_true")
+    dd.set_defaults(fn=cmd_dedupe)
 
     v = sub.add_parser("vdot", help="VDOT and equivalent times")
     v.add_argument("time", help="e.g. 26:17 or 2:08:21")

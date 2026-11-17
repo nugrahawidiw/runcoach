@@ -103,6 +103,17 @@ CTL/ATL/TSB line read at the week's end. Weeks with no runs still appear, so a r
 are visible. Load columns are blank for weeks before the cache starts rather than filled with a guess.
 Planned vs actual is not included yet: the plan is not available as data (roadmap P1.7).
 
+## Duplicate runs
+
+```
+python -m runcoach dedupe                   # which runs are cached twice, and which copy wins
+python -m runcoach dedupe --prefer garmin
+```
+
+A run synced from Strava and also imported from a Garmin FIT file is the same run under two cache keys.
+`load`, `weekly` and `plan` count it once and say so; `dedupe` shows the pairs. Matching is on start time
+within 2 minutes and a distance within 100 m (or 1% on longer runs). Nothing is ever deleted from the cache.
+
 ## Wellness trends
 
 ```

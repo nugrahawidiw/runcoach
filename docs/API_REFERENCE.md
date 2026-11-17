@@ -15,6 +15,17 @@ Pace and cadence chart for one run, as inline SVG.
 - `_esc(text: str) -> str` *(private)*
 - `pace_cadence_svg(report: dict, profile: Profile | None=None) -> str` Pace (left axis, faster upwards) and cadence (right axis) per lap, with the pace bands shaded.
 
+### `runcoach/analysis/dedupe.py`
+
+Spot the same run cached twice, once from Strava and once from a Garmin FIT import.
+
+- `source_of(key: str) -> str` Where a cached activity came from, read from its cache key (`fit-...` is a FIT import).
+- `_start(act: dict) -> dt.datetime | None` *(private)*
+- `_distances_match(a: float, b: float, tol_m: float, tol_pct: float) -> bool` *(private)*
+- `find_duplicate_groups(entries: Iterable[Entry], minutes: float=DEFAULT_MINUTES, tol_m: float=DEFAULT_TOL_M, tol_pct: float=DEFAULT_TOL_PCT) -> list[list[Entry]]` Groups of entries that look like the same run seen from different sources.
+- `resolve(entries: Sequence[Entry], prefer: str='strava', minutes: float=DEFAULT_MINUTES, tol_m: float=DEFAULT_TOL_M, tol_pct: float=DEFAULT_TOL_PCT) -> tuple[list[Entry], list[Entry], list[list[Entry]]]` Return (kept, dropped, groups). Entries that match nothing are always kept.
+- `render_markdown(groups: list[list[Entry]], prefer: str='strava') -> str`
+
 ### `runcoach/analysis/plan.py`
 
 The training plan as data: load it, compare it with what was actually run, export it as .ics.
@@ -78,7 +89,9 @@ Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | w
 - `_latest_id(cache: Cache) -> str` *(private)*
 - `_write_chart(report, path: str) -> None` *(private)*
 - `cmd_analyze(args)`
-- `_daily_loads(cache, profile, source: str) -> dict[date, float]` *(private)* Daily training load from the cache. Shared by `load` and `weekly` so the two always agree.
+- `_cached_activities(cache)` *(private)* (kept, dropped) cached activities, with Strava/Garmin duplicates resolved (roadmap P1.5).
+- `_duplicate_note(dropped) -> str` *(private)*
+- `_daily_loads(cache, profile, source: str) -> dict[date, float]` *(private)* Daily training load from the kept activities. Shared by `load` and `weekly` so the two always agree.
 - `cmd_plan(args)`
 - `cmd_weekly(args)`
 - `cmd_load(args)`
@@ -87,6 +100,7 @@ Command line: auth | sync | analyze | load | vdot | fit-analyze | fit-import | w
 - `cmd_fit_analyze(args)`
 - `cmd_fit_import(args)`
 - `_fmt(value, spec='', dash='-')` *(private)*
+- `cmd_dedupe(args)`
 - `cmd_trends(args)`
 - `cmd_readiness(args)`
 - `cmd_wellness(args)`
