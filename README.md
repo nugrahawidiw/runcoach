@@ -91,6 +91,24 @@ Each night shows the sleep score and its parts, duration, HRV (last night, 7-day
 range and status), the lowest heart rate in the sleep window, Garmin's resting HR, stress during sleep,
 body battery change and an estimate of sleep stages.
 
+## Install
+
+```
+pip install -e ".[dev]"            # working on the code
+pip install -e ".[dev,ics]"        # ... and the .ics export
+```
+
+Or build a wheel and install it anywhere (needs only `requests` and `fitdecode`):
+
+```
+python -m build --wheel
+pip install dist/runcoach-0.1.0-py3-none-any.whl
+runcoach vdot 26:17 5000
+```
+
+The wheel installs a `runcoach` command, so `python -m runcoach ...` and `runcoach ...` both work. On
+Windows prefer `python -m runcoach` if the Scripts directory is not on PATH.
+
 ## Weekly summary
 
 ```

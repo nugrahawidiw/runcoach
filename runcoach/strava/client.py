@@ -8,6 +8,7 @@ import requests
 
 from .auth import Tokens, TokenStore, refresh_tokens
 from .errors import AuthError, RateLimitError, StravaError
+from .types import Activity, Lap, Streams
 
 log = logging.getLogger("runcoach.strava")
 API = "https://www.strava.com/api/v3"
@@ -94,13 +95,13 @@ class StravaClient:
                 break
         return out
 
-    def get_activity(self, activity_id: int | str) -> dict | None:
+    def get_activity(self, activity_id: int | str) -> Activity | None:
         return self._get(f"/activities/{activity_id}", {"include_all_efforts": "false"})
 
-    def get_laps(self, activity_id: int | str) -> list[dict]:
+    def get_laps(self, activity_id: int | str) -> list[Lap]:
         return self._get(f"/activities/{activity_id}/laps") or []
 
-    def get_streams(self, activity_id: int | str, keys=STREAM_KEYS) -> dict:
+    def get_streams(self, activity_id: int | str, keys=STREAM_KEYS) -> Streams:
         """Full-resolution streams keyed by type: {'time': {'data': [...]}, ...}."""
         data = self._get(f"/activities/{activity_id}/streams",
                          {"keys": ",".join(keys), "key_by_type": "true"})
