@@ -1,3 +1,16 @@
+> # ARCHIVED - do not use
+>
+> This repository is superseded and read-only. It was built on 2026-11-17 from an old starter zip, in
+> parallel with a more developed version of the same project that was already under active development
+> at **`nugrahawidiw/main`, branch `claude/lucid-knuth-a8l7l5`**, under `runcoach/`.
+>
+> That version is larger (about 16,000 lines of Python against 5,000 here), has roughly twice the tests,
+> and additionally ships a web, Android and Windows front end. **Work there, not here.**
+>
+> Everything in this repository that the live version lacked was ported across on 2026-11-18 in
+> `nugrahawidiw/main` commit `bc03c9a`: the recorded Strava REST fixture, the typed REST shapes, and the
+> sleep-duration fix. Nothing here is unique any more.
+
 # runcoach
 
 Run-coaching analysis fed by the **Strava API**: per-lap pace, grade-adjusted pace (GAP), aerobic

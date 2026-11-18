@@ -1,5 +1,11 @@
 # runcoach: project guide for Claude Code
 
+## ARCHIVED - do not work here
+This repository is superseded. The live project is `nugrahawidiw/main`, branch
+`claude/lucid-knuth-a8l7l5`, under `runcoach/` -- larger, better tested, and with web, Android and
+Windows front ends. Everything this repository had that the live one lacked was ported there on
+2026-11-18 (`bc03c9a`). If you were asked to change runcoach, change it there and say so.
+
 ## What this is
 A personal Python tool that automates running-coaching analysis that was previously done by hand in a chat.
 It reads **Strava API** data and **Garmin FIT files** and produces: per-lap pace, grade-adjusted pace (GAP),
